@@ -15,9 +15,9 @@ import { JwtStrategy } from './jwt.strategy';
             inject: [ConfigService],
             // useFactory is used to create the JWT module
             useFactory: async (configService: ConfigService) => ({
-                secret: configService.get<string>('JWT_SECRET', 'fallback-dev-secret-key-12345'),
+                secret: configService.get<string>('JWT_SECRET'),
                 signOptions: {
-                    expiresIn: configService.get<string>('JWT_EXPIRES_IN', '1d') as any,
+                    expiresIn: configService.get<string>('JWT_EXPIRES_IN') as any,
                 },
             }),
         }),
