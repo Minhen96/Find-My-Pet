@@ -45,4 +45,18 @@ export class UsersService {
     async findOneById(id: string): Promise<User | null> {
         return this.usersRepository.findOne({ where: { id } });
     }
+
+    async updateRefreshToken(userId: string, refreshToken: string): Promise<void> {
+        const salt = await bcrypt.genSalt();
+        const hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
+        await this.usersRepository.update(userId, {
+            hashedRefreshToken,
+        });
+    }
+
+    async removeRefreshToken(userId: string): Promise<void> {
+        await this.usersRepository.update(userId, {
+            hashedRefreshToken: null as any,
+        });
+    }
 }

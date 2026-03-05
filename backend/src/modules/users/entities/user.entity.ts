@@ -23,6 +23,10 @@ export class User {
     @Exclude() // Automatically stripped from JSON responses by ClassSerializerInterceptor
     passwordHash: string;
 
+    @Column({ nullable: true })
+    @Exclude()
+    hashedRefreshToken: string;
+
     @Column({ unique: true, nullable: true })
     firebaseUid: string;
 
