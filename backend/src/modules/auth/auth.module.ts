@@ -3,9 +3,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
+import { UsersModule } from '../users/users.module';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
 
 @Module({
     imports: [
+        UsersModule,
         PassportModule.register({ defaultStrategy: 'jwt' }),
         // registerAsync is used to inject ConfigService to get the JWT secret and expiration time
         JwtModule.registerAsync({
@@ -22,8 +26,9 @@ import { JwtStrategy } from './jwt.strategy';
             }),
         }),
     ],
+    controllers: [AuthController],
     // provide JwtStrategy to be used in other modules
-    providers: [JwtStrategy],
+    providers: [JwtStrategy, AuthService],
     // export JwtModule and PassportModule to be used in other modules
     exports: [JwtModule, PassportModule],
 })
