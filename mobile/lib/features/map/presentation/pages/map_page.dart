@@ -12,7 +12,10 @@ class MapPage extends StatelessWidget {
         title: const Text('Map'),
       ),
       body: const Center(
-        child: Text('Interactive Map Coming Soon', style: TextStyle(color: AppColors.textPrimary)),
+        child: Text(
+          'Interactive Map Coming Soon',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
       ),
     );
   }

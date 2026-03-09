@@ -12,7 +12,10 @@ class ProfilePage extends StatelessWidget {
         title: const Text('Profile'),
       ),
       body: const Center(
-        child: Text('User Profile Coming Soon', style: TextStyle(color: AppColors.textPrimary)),
+        child: Text(
+          'User Profile Coming Soon',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
       ),
     );
   }

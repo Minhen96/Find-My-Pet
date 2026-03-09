@@ -12,7 +12,10 @@ class AlertsPage extends StatelessWidget {
         title: const Text('Alerts'),
       ),
       body: const Center(
-        child: Text('Notifications & Alerts Coming Soon', style: TextStyle(color: AppColors.textPrimary)),
+        child: Text(
+          'Notifications & Alerts Coming Soon',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
       ),
     );
   }

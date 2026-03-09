@@ -26,7 +26,7 @@ class MainLayout extends StatelessWidget {
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: _onItemTapped,
         backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.primary.withValues(alpha: 0.3),
+        indicatorColor: AppColors.primary.withOpacity(0.3),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.groups_outlined),
@@ -40,7 +40,10 @@ class MainLayout extends StatelessWidget {
           ),
           NavigationDestination(
             icon: Icon(Icons.notifications_outlined),
-            selectedIcon: Icon(Icons.notifications, color: AppColors.primaryDark),
+            selectedIcon: Icon(
+              Icons.notifications,
+              color: AppColors.primaryDark,
+            ),
             label: 'Alerts',
           ),
           NavigationDestination(
