@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/auth_field_label.dart';
+import '../widgets/auth_text_field.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
@@ -43,7 +45,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final password = _passwordController.text.trim();
     if (name.isEmpty || email.isEmpty || password.isEmpty) return;
 
-    ref.read(authProvider.notifier).register(
+    ref
+        .read(authProvider.notifier)
+        .register(
           email: email,
           password: password,
           fullName: name,
@@ -124,9 +128,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               const SizedBox(height: 32),
 
               // ── Full Name ──
-              _buildLabel('Full Name'),
+              const AuthFieldLabel(text: 'Full Name'),
               const SizedBox(height: 8),
-              _buildTextField(
+              AuthTextField(
                 controller: _nameController,
                 hint: 'Enter your full name',
                 icon: Icons.person_outline,
@@ -137,9 +141,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               const SizedBox(height: 16),
 
               // ── Email ──
-              _buildLabel('Email Address'),
+              const AuthFieldLabel(text: 'Email Address'),
               const SizedBox(height: 8),
-              _buildTextField(
+              AuthTextField(
                 controller: _emailController,
                 hint: 'e.g. name@email.com',
                 icon: Icons.mail_outline,
@@ -150,7 +154,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               const SizedBox(height: 16),
 
               // ── Phone Number (Malaysia) ──
-              _buildLabel('Phone Number'),
+              const AuthFieldLabel(text: 'Phone Number'),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -192,9 +196,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               const SizedBox(height: 16),
 
               // ── Password ──
-              _buildLabel('Password'),
+              const AuthFieldLabel(text: 'Password'),
               const SizedBox(height: 8),
-              _buildTextField(
+              AuthTextField(
                 controller: _passwordController,
                 hint: 'Create a secure password',
                 icon: Icons.lock_outline,
@@ -297,8 +301,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       ),
                     ),
                     TextButton(
-                      onPressed:
-                          isLoading ? null : () => context.go('/login'),
+                      onPressed: isLoading ? null : () => context.go('/login'),
                       child: Text(
                         'Log In',
                         style: GoogleFonts.inter(
@@ -316,44 +319,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4),
-      child: Text(
-        text,
-        style: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textLabel,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    TextInputType keyboardType = TextInputType.text,
-    TextCapitalization textCapitalization = TextCapitalization.none,
-    bool obscure = false,
-    bool enabled = true,
-    Widget? suffixIcon,
-  }) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      textCapitalization: textCapitalization,
-      obscureText: obscure,
-      enabled: enabled,
-      decoration: InputDecoration(
-        hintText: hint,
-        prefixIcon: Icon(icon, color: AppColors.textHint, size: 20),
-        suffixIcon: suffixIcon,
       ),
     );
   }

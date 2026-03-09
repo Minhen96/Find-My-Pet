@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/auth_field_label.dart';
+import '../widgets/auth_text_field.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -120,9 +122,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   const SizedBox(height: 32),
 
                   // ── Email Field ──
-                  _buildLabel('Email Address'),
+                  const AuthFieldLabel(text: 'Email Address'),
                   const SizedBox(height: 6),
-                  _buildTextField(
+                  AuthTextField(
                     controller: _emailController,
                     hint: 'hello@furryfriend.com',
                     icon: Icons.mail_outline,
@@ -133,9 +135,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   const SizedBox(height: 20),
 
                   // ── Password Field ──
-                  _buildLabel('Password'),
+                  const AuthFieldLabel(text: 'Password'),
                   const SizedBox(height: 6),
-                  _buildTextField(
+                  AuthTextField(
                     controller: _passwordController,
                     hint: '••••••••',
                     icon: Icons.lock_outline,
@@ -275,45 +277,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 4),
-        child: Text(
-          text,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textLabel,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    TextInputType keyboardType = TextInputType.text,
-    bool obscure = false,
-    bool enabled = true,
-    Widget? suffixIcon,
-  }) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      obscureText: obscure,
-      enabled: enabled,
-      decoration: InputDecoration(
-        hintText: hint,
-        prefixIcon: Icon(icon, color: AppColors.textHint, size: 20),
-        suffixIcon: suffixIcon,
       ),
     );
   }
