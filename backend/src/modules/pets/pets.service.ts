@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Pet } from './entities/pet.entity';
@@ -6,7 +6,9 @@ import { CreatePetDto } from './dto/create-pet.dto';
 import { FindPetsDto } from './dto/find-pets.dto';
 import { StorageService } from '../storage/storage.service';
 import { User } from '../users/entities/user.entity';
-import type { Point } from 'geojson';
+import Redis from 'ioredis';
+import * as crypto from 'crypto';
+import { REDIS_KEYS } from '../../common/constants/app.constants';
 
 @Injectable()
 export class PetsService {
@@ -14,6 +16,8 @@ export class PetsService {
         @InjectRepository(Pet)
         private readonly petsRepository: Repository<Pet>,
         private readonly storageService: StorageService,
+        @Inject('REDIS_CLIENT')
+        private readonly redis: Redis,
     ) { }
 
     async create(
@@ -30,22 +34,42 @@ export class PetsService {
             }
         }
 
-        const location: Point = {
+        const location = {
             type: 'Point',
             coordinates: [createPetDto.longitude, createPetDto.latitude],
         };
 
-        const pet = this.petsRepository.create({
+        const pet = await this.petsRepository.save(this.petsRepository.create({
             ...createPetDto,
             images: imageUrls,
             location,
             poster: user,
-        });
+        }));
 
-        return this.petsRepository.save(pet);
+        // Invalidate all feed caches on new pet creation
+        const keys = await this.redis.keys(`${REDIS_KEYS.FEED_CACHE_PREFIX}*`);
+        if (keys.length > 0) {
+            await this.redis.del(...keys);
+        }
+
+        return pet;
     }
 
     async findAll(query?: FindPetsDto): Promise<Pet[]> {
+        // 1. Create a unique cache key based on the query parameters
+        const queryHash = crypto
+            .createHash('md5')
+            .update(JSON.stringify(query || {}))
+            .digest('hex');
+        const cacheKey = `${REDIS_KEYS.FEED_CACHE_PREFIX}${queryHash}`;
+
+        // 2. Check Redis Cache
+        const cachedData = await this.redis.get(cacheKey);
+        if (cachedData) {
+            return JSON.parse(cachedData);
+        }
+
+        // 3. Cache Miss: Fetch from Database
         const queryBuilder = this.petsRepository.createQueryBuilder('pet')
             .leftJoinAndSelect('pet.poster', 'poster')
             .orderBy('pet.createdAt', 'DESC');
@@ -60,7 +84,6 @@ export class PetsService {
             }
 
             if (query.latitude && query.longitude && query.radius) {
-                // PostGIS radial search
                 queryBuilder.andWhere(
                     'ST_DWithin(pet.location, ST_MakePoint(:longitude, :latitude)::geography, :radius)',
                     {
@@ -72,7 +95,12 @@ export class PetsService {
             }
         }
 
-        return queryBuilder.getMany();
+        const pets = await queryBuilder.getMany();
+
+        // 4. Save to Redis Cache (TTL: 5 minutes = 300 seconds)
+        await this.redis.set(cacheKey, JSON.stringify(pets), 'EX', 300);
+
+        return pets;
     }
 
     async findOne(id: string): Promise<Pet> {

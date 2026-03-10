@@ -3,6 +3,9 @@ import { ServerOptions } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import { createClient } from 'redis';
 
+// To scale the WebSocket server to multiple instances.
+// Each instance will have its own Redis connection.
+// The adapter uses Redis pub/sub to broadcast messages to all instances.
 export class RedisIoAdapter extends IoAdapter {
     private adapterConstructor: ReturnType<typeof createAdapter>;
 

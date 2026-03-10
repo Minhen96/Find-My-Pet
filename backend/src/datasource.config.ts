@@ -4,6 +4,7 @@ import { join } from 'path';
 
 config({ path: join(__dirname, '../../.env') });
 
+// Connect to the PostgreSQL database.
 export default new DataSource({
     type: 'postgres',
     host: process.env.DB_HOST,
