@@ -23,6 +23,18 @@ class Pets extends _$Pets {
     await refresh();
   }
 
+  Future<void> updatePet(String id, Map<String, dynamic> petData, List<XFile> images) async {
+    final repository = ref.read(petRepositoryProvider);
+    await repository.updatePet(id, petData, images);
+    await refresh();
+  }
+
+  Future<void> deletePet(String id) async {
+    final repository = ref.read(petRepositoryProvider);
+    await repository.deletePet(id);
+    await refresh();
+  }
+
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => _fetchPets());

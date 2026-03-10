@@ -8,6 +8,9 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/providers/socket_provider.dart';
 import '../data/models/pet.dart';
 import '../providers/interactions_provider.dart';
+import '../../auth/presentation/providers/auth_provider.dart'; // Add auth
+import '../providers/pets_provider.dart'; // Add pets provider for delete
+import './edit_pet_page.dart'; // Add edit page
 
 class PostDetailsPage extends ConsumerStatefulWidget {
   final Pet pet;
@@ -33,6 +36,42 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
     super.dispose();
   }
 
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Post?'),
+        content: const Text('This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await ref.read(petsProvider.notifier).deletePet(widget.pet.id);
+        if (mounted) {
+          context.pop(); // Go back to feed
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Post deleted')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete: $e')),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final interactionsAsync = ref.watch(interactionsProvider(widget.pet.id));
@@ -46,6 +85,20 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: AppColors.textPrimary,
+        actions: [
+          if (ref.watch(authProvider).value?.id == widget.pet.poster.id) ...[
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => EditPetPage(pet: widget.pet)),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              onPressed: () => _confirmDelete(),
+            ),
+          ],
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -210,7 +263,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                               CircleAvatar(
                                 radius: 16,
                                 backgroundImage: NetworkImage(
-                                  'https://ui-avatars.com/api/?name=${comment['user']['fullName']}',
+                                  'https://ui-avatars.com/api/?name=${comment['user']['displayName']}',
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -219,7 +272,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      comment['user']['fullName'],
+                                      comment['user']['displayName'],
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
                                         fontWeight: FontWeight.bold,

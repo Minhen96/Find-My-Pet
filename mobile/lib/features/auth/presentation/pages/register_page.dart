@@ -50,7 +50,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         .register(
           email: email,
           password: password,
-          fullName: name,
+          displayName: name,
           phoneNumber: phone.isNotEmpty ? '+60$phone' : null,
         );
   }

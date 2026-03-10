@@ -1,15 +1,19 @@
-import { Injectable, ConflictException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, ConflictException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { RegisterDto } from '../auth/dto/register.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { Pet } from '../pets/entities/pet.entity';
 
 @Injectable()
 export class UsersService {
     constructor(
         @InjectRepository(User)
         private usersRepository: Repository<User>,
+        @InjectRepository(Pet)
+        private petsRepository: Repository<Pet>,
     ) { }
 
     async create(registerDto: RegisterDto): Promise<User> {
@@ -44,6 +48,21 @@ export class UsersService {
 
     async findOneById(id: string): Promise<User | null> {
         return this.usersRepository.findOne({ where: { id } });
+    }
+
+    async update(userId: string, updateUserDto: UpdateUserDto): Promise<User> {
+        const user = await this.findOneById(userId);
+        if (!user) throw new NotFoundException('User not found');
+
+        Object.assign(user, updateUserDto);
+        return this.usersRepository.save(user);
+    }
+
+    async getUserPets(userId: string): Promise<Pet[]> {
+        return this.petsRepository.find({
+            where: { poster: { id: userId } },
+            order: { createdAt: 'DESC' },
+        });
     }
 
     async updateRefreshToken(userId: string, refreshToken: string): Promise<void> {

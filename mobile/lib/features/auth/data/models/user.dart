@@ -8,8 +8,10 @@ abstract class User with _$User {
   const factory User({
     required String id,
     required String email,
-    required String fullName,
+    required String displayName,
     String? phoneNumber,
+    String? avatarUrl,
+    String? bio,
     @Default('user') String role,
   }) = _User;
 

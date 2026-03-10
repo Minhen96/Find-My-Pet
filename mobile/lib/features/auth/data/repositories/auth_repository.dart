@@ -25,7 +25,7 @@ class AuthRepository {
   Future<AuthResponse> register({
     required String email,
     required String password,
-    required String fullName,
+    required String displayName,
     String? phoneNumber,
   }) async {
     final response = await _dio.post(
@@ -33,12 +33,33 @@ class AuthRepository {
       data: {
         'email': email,
         'password': password,
-        'fullName': fullName,
+        'displayName': displayName,
         if (phoneNumber != null && phoneNumber.isNotEmpty)
-          'phoneNumber': phoneNumber,
+          'phone': phoneNumber, // Backend uses 'phone'
       },
     );
     return AuthResponse.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<User> getProfile() async {
+    final response = await _dio.get('/users/me');
+    return User.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<User> updateProfile({
+    String? displayName,
+    String? bio,
+    String? avatarUrl,
+  }) async {
+    final response = await _dio.patch(
+      '/users/me',
+      data: {
+        if (displayName != null) 'displayName': displayName,
+        if (bio != null) 'bio': bio,
+        if (avatarUrl != null) 'avatarUrl': avatarUrl,
+      },
+    );
+    return User.fromJson(response.data as Map<String, dynamic>);
   }
 }
 

@@ -13,18 +13,15 @@ class Auth extends _$Auth {
     final secureStorage = ref.read(secureStorageProvider);
     final token = await secureStorage.getAccessToken();
     
-    // If we have a token, we could optionally hit a `/auth/me` endpoint to validate it
-    // and fetch the latest user object. For MVP, we'll try to decode it or just 
-    // leave it as null user but with a valid token so guards let us through.
-    // Assuming backend returns user info with login. Let's just return null if no token, 
-    // or try to fetch user if token exists. Since we don't have `/auth/me` yet,
-    // we'll just check if token exists. A better approach is fetching user profile.
-    
     if (token != null && token.isNotEmpty) {
-      // NOTE: We ideally need a fetchProfile() in the repository to populate this User object on app restart.
-      // For now, if there's a token, the user is conceptually logged in. 
-      // We will leave the user object as null but the interceptor will use the token.
-      // A more complete implementation would decode the JWT or fetch the profile here.
+      try {
+        final repository = ref.read(authRepositoryProvider);
+        return await repository.getProfile();
+      } catch (e) {
+        // If profile fetch fails (e.g., token expired), clear tokens
+        await secureStorage.clearTokens();
+        return null;
+      }
     }
     
     return null;
@@ -49,7 +46,7 @@ class Auth extends _$Auth {
   Future<void> register({
     required String email,
     required String password,
-    required String fullName,
+    required String displayName,
     String? phoneNumber,
   }) async {
     state = const AsyncLoading();
@@ -58,7 +55,7 @@ class Auth extends _$Auth {
       final response = await repository.register(
         email: email,
         password: password,
-        fullName: fullName,
+        displayName: displayName,
         phoneNumber: phoneNumber,
       );
       
@@ -69,6 +66,22 @@ class Auth extends _$Auth {
       );
       
       return response.user;
+    });
+  }
+
+  Future<void> updateProfile({
+    String? displayName,
+    String? bio,
+    String? avatarUrl,
+  }) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final repository = ref.read(authRepositoryProvider);
+      return await repository.updateProfile(
+        displayName: displayName,
+        bio: bio,
+        avatarUrl: avatarUrl,
+      );
     });
   }
 

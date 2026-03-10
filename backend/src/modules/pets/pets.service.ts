@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Pet } from './entities/pet.entity';
 import { CreatePetDto } from './dto/create-pet.dto';
+import { UpdatePetDto } from './dto/update-pet.dto';
 import { FindPetsDto } from './dto/find-pets.dto';
 import { StorageService } from '../storage/storage.service';
 import { User } from '../users/entities/user.entity';
@@ -114,5 +115,60 @@ export class PetsService {
         }
 
         return pet;
+    }
+
+    async update(
+        id: string,
+        userId: string,
+        updatePetDto: UpdatePetDto,
+        files?: Express.Multer.File[],
+    ): Promise<Pet> {
+        const pet = await this.findOne(id);
+
+        if (pet.poster.id !== userId) {
+            throw new ForbiddenException('You do not have permission to update this post');
+        }
+
+        const imageUrls = [...pet.images];
+        if (files && files.length > 0) {
+            for (const file of files) {
+                const url = await this.storageService.uploadFile(file, 'pets');
+                imageUrls.push(url);
+            }
+        }
+
+        const updateData: any = { ...updatePetDto };
+        if (updatePetDto.latitude && updatePetDto.longitude) {
+            updateData.location = {
+                type: 'Point',
+                coordinates: [updatePetDto.longitude, updatePetDto.latitude],
+            };
+            delete updateData.latitude;
+            delete updateData.longitude;
+        }
+
+        Object.assign(pet, { ...updateData, images: imageUrls });
+        const updatedPet = await this.petsRepository.save(pet);
+
+        await this.invalidateCache();
+        return updatedPet;
+    }
+
+    async remove(id: string, userId: string): Promise<void> {
+        const pet = await this.findOne(id);
+
+        if (pet.poster.id !== userId) {
+            throw new ForbiddenException('You do not have permission to delete this post');
+        }
+
+        await this.petsRepository.remove(pet);
+        await this.invalidateCache();
+    }
+
+    private async invalidateCache() {
+        const keys = await this.redis.keys(`${REDIS_KEYS.FEED_CACHE_PREFIX}*`);
+        if (keys.length > 0) {
+            await this.redis.del(...keys);
+        }
     }
 }

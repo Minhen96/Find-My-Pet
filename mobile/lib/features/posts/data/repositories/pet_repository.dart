@@ -57,6 +57,29 @@ class PetRepository {
     final response = await _dio.post('/pets', data: formData);
     return Pet.fromJson(response.data as Map<String, dynamic>);
   }
+
+  Future<Pet> updatePet(
+      String id, Map<String, dynamic> petData, List<XFile> images) async {
+    final formData = FormData.fromMap({
+      ...petData,
+      if (images.isNotEmpty)
+        'images': await Future.wait(
+          images.map(
+            (file) async => await MultipartFile.fromFile(
+              file.path,
+              filename: file.name,
+            ),
+          ),
+        ),
+    });
+
+    final response = await _dio.patch('/pets/$id', data: formData);
+    return Pet.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<void> deletePet(String id) async {
+    await _dio.delete('/pets/$id');
+  }
 }
 
 @riverpod
