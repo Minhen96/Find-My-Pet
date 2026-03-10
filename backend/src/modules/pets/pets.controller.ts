@@ -12,6 +12,7 @@ import {
     Delete,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
 import { PetsService } from './pets.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
@@ -24,6 +25,7 @@ export class PetsController {
     constructor(private readonly petsService: PetsService) { }
 
     @Post()
+    @Throttle({ upload: { limit: 10, ttl: 3600000 } })
     @UseInterceptors(FilesInterceptor('images', 5))
     async create(
         @Body() createPetDto: CreatePetDto,
@@ -44,6 +46,7 @@ export class PetsController {
     }
 
     @Patch(':id')
+    @Throttle({ upload: { limit: 10, ttl: 3600000 } })
     @UseInterceptors(FilesInterceptor('images', 5))
     async update(
         @Param('id', ParseUUIDPipe) id: string,

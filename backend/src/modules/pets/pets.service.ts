@@ -48,9 +48,14 @@ export class PetsService {
         }));
 
         // Invalidate all feed caches on new pet creation
-        const keys = await this.redis.keys(`${REDIS_KEYS.FEED_CACHE_PREFIX}*`);
-        if (keys.length > 0) {
-            await this.redis.del(...keys);
+        try {
+            const keys = await this.redis.keys(`${REDIS_KEYS.FEED_CACHE_PREFIX}*`);
+            if (keys.length > 0) {
+                await this.redis.del(...keys);
+            }
+        } catch (error) {
+            console.error('Redis Cache Invalidation Error (Creation):', error);
+            // Fail open - don't block pet creation if cache invalidation fails
         }
 
         return pet;
@@ -65,9 +70,14 @@ export class PetsService {
         const cacheKey = `${REDIS_KEYS.FEED_CACHE_PREFIX}${queryHash}`;
 
         // 2. Check Redis Cache
-        const cachedData = await this.redis.get(cacheKey);
-        if (cachedData) {
-            return JSON.parse(cachedData);
+        try {
+            const cachedData = await this.redis.get(cacheKey);
+            if (cachedData) {
+                return JSON.parse(cachedData);
+            }
+        } catch (error) {
+            console.error('Redis Cache Fetch Error:', error);
+            // Fail open - proceed to database if cache fails
         }
 
         // 3. Cache Miss: Fetch from Database
@@ -99,7 +109,12 @@ export class PetsService {
         const pets = await queryBuilder.getMany();
 
         // 4. Save to Redis Cache (TTL: 5 minutes = 300 seconds)
-        await this.redis.set(cacheKey, JSON.stringify(pets), 'EX', 300);
+        try {
+            await this.redis.set(cacheKey, JSON.stringify(pets), 'EX', 300);
+        } catch (error) {
+            console.error('Redis Cache Save Error:', error);
+            // Fail open
+        }
 
         return pets;
     }
@@ -166,9 +181,14 @@ export class PetsService {
     }
 
     private async invalidateCache() {
-        const keys = await this.redis.keys(`${REDIS_KEYS.FEED_CACHE_PREFIX}*`);
-        if (keys.length > 0) {
-            await this.redis.del(...keys);
+        try {
+            const keys = await this.redis.keys(`${REDIS_KEYS.FEED_CACHE_PREFIX}*`);
+            if (keys.length > 0) {
+                await this.redis.del(...keys);
+            }
+        } catch (error) {
+            console.error('Redis Cache Invalidation Error:', error);
+            // Fail open
         }
     }
 }

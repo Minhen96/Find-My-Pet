@@ -3,7 +3,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import * as Joi from 'joi';
+import { validate } from './common/config/env.validation';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { CorrelationMiddleware } from './common/middleware/correlation.middleware';
 import { AuthModule } from './modules/auth/auth.module';
@@ -39,10 +39,23 @@ import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis'
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        throttlers: [{
-          ttl: 60000,
-          limit: 60,
-        }],
+        throttlers: [
+          {
+            name: 'default',
+            ttl: 60000,
+            limit: 60,
+          },
+          {
+            name: 'auth',
+            ttl: 60000,
+            limit: 5, // Stricter for login/register
+          },
+          {
+            name: 'upload',
+            ttl: 3600000,
+            limit: 10, // Max 10 uploads per hour
+          },
+        ],
         storage: new ThrottlerStorageRedisService({
           host: configService.get('REDIS_HOST', 'localhost'),
           port: configService.get('REDIS_PORT', 6379),
@@ -51,26 +64,10 @@ import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis'
     }),
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '../.env',
-      validationSchema: Joi.object({
-        DB_HOST: Joi.string().required(),
-        DB_PORT: Joi.number().default(5432),
-        DB_USER: Joi.string().required(),
-        DB_PASSWORD: Joi.string().required(),
-        DB_NAME: Joi.string().required(),
-        JWT_SECRET: Joi.string().required(),
-        JWT_EXPIRES_IN: Joi.string().default('15m'),
-        JWT_REFRESH_SECRET: Joi.string().required(),
-        JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
-        R2_ACCOUNT_ID: Joi.string().required(),
-        R2_ACCESS_KEY_ID: Joi.string().required(),
-        R2_SECRET_ACCESS_KEY: Joi.string().required(),
-        R2_BUCKET_NAME: Joi.string().required(),
-        R2_PUBLIC_URL: Joi.string().uri().required(),
-        REDIS_HOST: Joi.string().default('localhost'),
-        REDIS_PORT: Joi.number().default(6379),
-        FRONTEND_URL: Joi.string().uri().default('http://localhost:3000'),
-      }),
+      envFilePath: process.env.NODE_ENV === 'production'
+        ? '.env.production'
+        : '.env.development',
+      validate,
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
