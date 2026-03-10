@@ -10,6 +10,7 @@ import '../../features/posts/presentation/pages/community_feed_page.dart';
 import '../../features/map/presentation/pages/map_page.dart';
 import '../../features/alerts/presentation/pages/alerts_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/posts/presentation/pages/create_post_page.dart';
 
 part 'app_router.g.dart';
 
@@ -40,6 +41,10 @@ GoRouter appRouter(Ref ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        path: '/create-post',
+        builder: (context, state) => const CreatePostPage(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

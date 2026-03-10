@@ -16,6 +16,12 @@ class Pets extends _$Pets {
     return await repository.getPets(status: status, type: type);
   }
 
+  Future<void> createPet(Map<String, dynamic> petData) async {
+    final repository = ref.read(petRepositoryProvider);
+    await repository.createPet(petData);
+    await refresh();
+  }
+
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => _fetchPets());

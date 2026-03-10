@@ -7,10 +7,12 @@ import {
     UseInterceptors,
     UploadedFiles,
     ParseUUIDPipe,
+    Query,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { PetsService } from './pets.service';
 import { CreatePetDto } from './dto/create-pet.dto';
+import { FindPetsDto } from './dto/find-pets.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
 
@@ -29,8 +31,8 @@ export class PetsController {
     }
 
     @Get()
-    async findAll() {
-        return this.petsService.findAll();
+    async findAll(@Query() findPetsDto: FindPetsDto) {
+        return this.petsService.findAll(findPetsDto);
     }
 
     @Get(':id')

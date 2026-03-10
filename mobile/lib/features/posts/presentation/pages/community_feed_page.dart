@@ -173,7 +173,7 @@ class CommunityFeedPage extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () => context.push('/create-post'),
         backgroundColor: AppColors.primary,
         child: const Icon(
           Icons.add_circle_outline,
