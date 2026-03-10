@@ -7,11 +7,17 @@ import {
     IsDateString,
     Min,
     Max,
+    IsArray,
 } from 'class-validator';
 import { PetType, PetStatus } from '../enums/pet.enum';
 import { Type } from 'class-transformer';
 
 export class CreatePetDto {
+    @IsArray()
+    @IsString({ each: true })
+    @IsOptional()
+    imageUrls?: string[];
+
     @IsEnum(PetType)
     @IsNotEmpty()
     type: PetType;

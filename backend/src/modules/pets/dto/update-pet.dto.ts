@@ -1,7 +1,12 @@
-import { IsString, IsOptional, IsEnum, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsNumber, IsArray } from 'class-validator';
 import { PetType, PetStatus } from '../enums/pet.enum';
 
 export class UpdatePetDto {
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    imageUrls?: string[];
+
     @IsOptional()
     @IsString()
     name?: string;

@@ -3,10 +3,12 @@ import { ConfigService } from '@nestjs/config';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
+import { CircuitBreaker } from '../../common/utils/circuit-breaker';
 
 @Injectable()
 export class StorageService {
     private readonly logger = new Logger(StorageService.name);
+    private readonly breaker: CircuitBreaker;
     private s3Client: S3Client;
     private bucketName: string;
     private publicUrl: string;
@@ -27,13 +29,15 @@ export class StorageService {
                 secretAccessKey,
             },
         });
+
+        this.breaker = new CircuitBreaker('R2', 3, 60000); // 3 failures, 1 minute reset
     }
 
     async uploadFile(file: Express.Multer.File, folder: string): Promise<string> {
         const fileExtension = path.extname(file.originalname);
         const fileName = `${folder}/${uuidv4()}${fileExtension}`;
 
-        try {
+        const action = async () => {
             await this.s3Client.send(
                 new PutObjectCommand({
                     Bucket: this.bucketName,
@@ -42,13 +46,9 @@ export class StorageService {
                     ContentType: file.mimetype,
                 }),
             );
-
-            // Return the public URL for the uploaded file
             return `${this.publicUrl}/${fileName}`;
-        } catch (error: any) {
-            // Logic for Circuit Breaker: Log the exact error but provide a clear user-facing exception
-            this.logger.error(`Storage Upload Failed for file ${file.originalname}: ${error.message}`, error.stack);
-            throw new InternalServerErrorException('Storage service is currently unavailable. Please try again later.');
-        }
+        };
+
+        return this.breaker.execute(action, ''); // Return empty string on failure
     }
 }

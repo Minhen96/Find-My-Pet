@@ -10,28 +10,35 @@ import { User } from '../users/entities/user.entity';
 import Redis from 'ioredis';
 import * as crypto from 'crypto';
 import { REDIS_KEYS } from '../../common/constants/app.constants';
+import { CircuitBreaker } from '../../common/utils/circuit-breaker';
 
 @Injectable()
 export class PetsService {
+    private readonly redisBreaker: CircuitBreaker;
+
     constructor(
         @InjectRepository(Pet)
         private readonly petsRepository: Repository<Pet>,
         private readonly storageService: StorageService,
         @Inject('REDIS_CLIENT')
         private readonly redis: Redis,
-    ) { }
+    ) {
+        this.redisBreaker = new CircuitBreaker('Redis', 5, 30000);
+    }
 
-    async create(
+    async createCommunityPost(
         createPetDto: CreatePetDto,
         files: Express.Multer.File[],
         user: User,
     ): Promise<Pet> {
-        const imageUrls: string[] = [];
+        const imageUrls: string[] = createPetDto.imageUrls || [];
 
         if (files && files.length > 0) {
             for (const file of files) {
                 const url = await this.storageService.uploadFile(file, 'pets');
-                imageUrls.push(url);
+                if (url) {
+                    imageUrls.push(url);
+                }
             }
         }
 
@@ -48,15 +55,16 @@ export class PetsService {
         }));
 
         // Invalidate all feed caches on new pet creation
-        try {
-            const keys = await this.redis.keys(`${REDIS_KEYS.FEED_CACHE_PREFIX}*`);
-            if (keys.length > 0) {
-                await this.redis.del(...keys);
-            }
-        } catch (error) {
-            console.error('Redis Cache Invalidation Error (Creation):', error);
-            // Fail open - don't block pet creation if cache invalidation fails
-        }
+        // Since latest post should immediately appear in the feed (but not delay until cache expires)
+        await this.redisBreaker.execute(
+            async () => {
+                const keys = await this.redis.keys(`${REDIS_KEYS.FEED_CACHE_PREFIX}*`);
+                if (keys.length > 0) {
+                    await this.redis.del(...keys);
+                }
+            },
+            null,
+        );
 
         return pet;
     }
@@ -70,14 +78,14 @@ export class PetsService {
         const cacheKey = `${REDIS_KEYS.FEED_CACHE_PREFIX}${queryHash}`;
 
         // 2. Check Redis Cache
-        try {
-            const cachedData = await this.redis.get(cacheKey);
-            if (cachedData) {
-                return JSON.parse(cachedData);
-            }
-        } catch (error) {
-            console.error('Redis Cache Fetch Error:', error);
-            // Fail open - proceed to database if cache fails
+        // If Redis is down, fail open - proceed to database
+        const cachedData = await this.redisBreaker.execute(
+            () => this.redis.get(cacheKey),
+            null,
+        );
+
+        if (cachedData) {
+            return JSON.parse(cachedData);
         }
 
         // 3. Cache Miss: Fetch from Database
@@ -109,12 +117,10 @@ export class PetsService {
         const pets = await queryBuilder.getMany();
 
         // 4. Save to Redis Cache (TTL: 5 minutes = 300 seconds)
-        try {
-            await this.redis.set(cacheKey, JSON.stringify(pets), 'EX', 300);
-        } catch (error) {
-            console.error('Redis Cache Save Error:', error);
-            // Fail open
-        }
+        await this.redisBreaker.execute(
+            () => this.redis.set(cacheKey, JSON.stringify(pets), 'EX', 300),
+            null,
+        );
 
         return pets;
     }
@@ -144,11 +150,16 @@ export class PetsService {
             throw new ForbiddenException('You do not have permission to update this post');
         }
 
-        const imageUrls = [...pet.images];
+        const imageUrls = [
+            ...(updatePetDto.imageUrls || pet.images || []),
+        ];
+
         if (files && files.length > 0) {
             for (const file of files) {
                 const url = await this.storageService.uploadFile(file, 'pets');
-                imageUrls.push(url);
+                if (url) {
+                    imageUrls.push(url);
+                }
             }
         }
 
@@ -181,14 +192,14 @@ export class PetsService {
     }
 
     private async invalidateCache() {
-        try {
-            const keys = await this.redis.keys(`${REDIS_KEYS.FEED_CACHE_PREFIX}*`);
-            if (keys.length > 0) {
-                await this.redis.del(...keys);
-            }
-        } catch (error) {
-            console.error('Redis Cache Invalidation Error:', error);
-            // Fail open
-        }
+        await this.redisBreaker.execute(
+            async () => {
+                const keys = await this.redis.keys(`${REDIS_KEYS.FEED_CACHE_PREFIX}*`);
+                if (keys.length > 0) {
+                    await this.redis.del(...keys);
+                }
+            },
+            null,
+        );
     }
 }

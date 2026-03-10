@@ -32,7 +32,7 @@ export class PetsController {
         @UploadedFiles() files: Express.Multer.File[],
         @CurrentUser() user: User,
     ) {
-        return this.petsService.create(createPetDto, files, user);
+        return this.petsService.createCommunityPost(createPetDto, files, user);
     }
 
     @Get()

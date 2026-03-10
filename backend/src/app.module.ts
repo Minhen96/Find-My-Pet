@@ -14,6 +14,7 @@ import { RedisModule } from './modules/redis/redis.module';
 import { BullModule } from '@nestjs/bullmq';
 import { EventsModule } from './modules/events/events.module';
 import { HealthModule } from './modules/health/health.module';
+import { MediaModule } from './modules/media/media.module';
 
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 
@@ -26,6 +27,7 @@ import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis'
     RedisModule,
     EventsModule,
     HealthModule,
+    MediaModule,
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
