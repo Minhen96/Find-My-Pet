@@ -18,7 +18,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     catch(exception: unknown, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
-        const request = ctx.getRequest<Request>();
+        const request = ctx.getRequest<any>();
 
         // Determine the status code and message based on the exception type
         const status =
@@ -31,9 +31,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
                 ? exception.getResponse()
                 : 'Internal server error';
 
+        const correlationId = request['correlationId'] || 'no-id';
+
         // Log the error
         this.logger.error(
-            `${request.method} ${request.url} ${status} - ${exception instanceof Error ? exception.message : JSON.stringify(message)
+            `[${correlationId}] ${request.method} ${request.url} ${status} - ${exception instanceof Error ? exception.message : JSON.stringify(message)
             }`,
             exception instanceof Error ? exception.stack : '',
         );
@@ -44,6 +46,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
             timestamp: new Date().toISOString(),
             path: request.url,
             message: message,
+            correlationId, // 🆔 Help the user find their error in the logs!
         });
     }
 }

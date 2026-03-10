@@ -8,9 +8,10 @@ export class LoggerMiddleware implements NestMiddleware {
     // request: Request -> incoming request
     // response: Response -> outgoing response
     // next: NextFunction -> next middleware in the chain
-    use(request: Request, response: Response, next: NextFunction): void {
+    use(request: any, response: Response, next: NextFunction): void {
         const { ip, method, originalUrl } = request;
         const userAgent = request.get('user-agent') || '';
+        const correlationId = request.correlationId || 'no-id';
 
         // Wait for the response to finish, then log the status code
         response.on('finish', () => {
@@ -18,7 +19,7 @@ export class LoggerMiddleware implements NestMiddleware {
             const contentLength = response.get('content-length') || '0';
 
             this.logger.log(
-                `${method} ${originalUrl} ${statusCode} ${contentLength} - ${userAgent} ${ip}`
+                `[${correlationId}] ${method} ${originalUrl} ${statusCode} ${contentLength} - ${userAgent} ${ip}`
             );
         });
 

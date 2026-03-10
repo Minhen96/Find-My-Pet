@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { CorrelationMiddleware } from './common/middleware/correlation.middleware';
 import { AuthModule } from './modules/auth/auth.module';
 import { PetsModule } from './modules/pets/pets.module';
 import { StorageModule } from './modules/storage/storage.module';
@@ -12,6 +13,7 @@ import { InteractionsModule } from './modules/interactions/interactions.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { BullModule } from '@nestjs/bullmq';
 import { EventsModule } from './modules/events/events.module';
+import { HealthModule } from './modules/health/health.module';
 
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 
@@ -23,6 +25,7 @@ import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis'
     InteractionsModule,
     RedisModule,
     EventsModule,
+    HealthModule,
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -32,6 +35,7 @@ import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis'
         },
       }),
     }),
+    // Distributed rate limiting across multiple instances.
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -96,6 +100,6 @@ import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis'
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
+    consumer.apply(CorrelationMiddleware, LoggerMiddleware).forRoutes('*');
   }
 }
