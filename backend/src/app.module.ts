@@ -13,6 +13,8 @@ import { RedisModule } from './modules/redis/redis.module';
 import { BullModule } from '@nestjs/bullmq';
 import { EventsModule } from './modules/events/events.module';
 
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
+
 @Module({
   imports: [
     AuthModule,
@@ -30,16 +32,19 @@ import { EventsModule } from './modules/events/events.module';
         },
       }),
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 60,
-      /* 
-       * To use Redis for distributed rate limiting (modern standard for scaling):
-       * 1. npm install throttler-storage-redis ioredis
-       * 2. import { ThrottlerStorageRedisService } from 'throttler-storage-redis';
-       * 3. Add: storage: new ThrottlerStorageRedisService('redis://localhost:6379'),
-       */
-    }]),
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        throttlers: [{
+          ttl: 60000,
+          limit: 60,
+        }],
+        storage: new ThrottlerStorageRedisService({
+          host: configService.get('REDIS_HOST', 'localhost'),
+          port: configService.get('REDIS_PORT', 6379),
+        }),
+      }),
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '../.env',

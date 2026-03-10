@@ -38,10 +38,12 @@ export class InteractionsService {
         const isLiked = await this.redis.sismember(redisKey, user.id);
 
         if (isLiked) {
+            // Remove from cache
             await this.redis.srem(redisKey, user.id);
             await this.redis.decr(countKey);
 
-            // 🔥 Push to Queue - Don't wait for DB!
+            // 🔥 Add a job to BullMQ - Don't wait for DB!
+            // returns "Success" to the user while the DB update happens later
             await this.interactionsQueue.add(JOB_NAMES.UNLIKE, {
                 petId,
                 userId: user.id,
@@ -57,10 +59,12 @@ export class InteractionsService {
 
             return { liked: false };
         } else {
+            // Add to cache
             await this.redis.sadd(redisKey, user.id);
             await this.redis.incr(countKey);
 
-            // 🔥 Push to Queue - Don't wait for DB!
+            // 🔥 Add a job to BullMQ - Don't wait for DB!
+            // returns "Success" to the user while the DB update happens later
             await this.interactionsQueue.add(JOB_NAMES.LIKE, {
                 petId,
                 userId: user.id,

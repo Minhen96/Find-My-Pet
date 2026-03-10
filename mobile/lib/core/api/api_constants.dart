@@ -8,7 +8,7 @@ class ApiConstants {
     return 'localhost';
   }
 
-  static String get baseUrl => 'http://$_host:3000/api';
+  static String get baseUrl => 'http://$_host:3000/api/v1';
   static String get socketUrl => 'http://$_host:3000';
 
   // Endpoints

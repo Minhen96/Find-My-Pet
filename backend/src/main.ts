@@ -1,5 +1,5 @@
-import { NestFactory, HttpAdapterHost, Reflector } from '@nestjs/core';
-import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { ValidationPipe, ClassSerializerInterceptor, VersioningType } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
@@ -37,8 +37,12 @@ async function bootstrap() {
   await redisIoAdapter.connectToRedis();
   app.useWebSocketAdapter(redisIoAdapter);
 
-  // Global Prefix
+  // 0️⃣ API Versioning (URI based: /api/v1/...)
   app.setGlobalPrefix('api');
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
 
   // 1️⃣ Helmet (Security Headers)
   app.use(helmet());
@@ -67,12 +71,11 @@ async function bootstrap() {
 
   // CORS Configuration
   app.enableCors({
-    origin: process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : '*', // Adjust in prod to specific domain
+    origin: process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : '*',
     credentials: true,
   });
 
   // Global Exception Filter
-  const httpAdapter = app.get(HttpAdapterHost);
   app.useGlobalFilters(new GlobalExceptionFilter());
 
   // Global Interceptors
@@ -86,7 +89,7 @@ async function bootstrap() {
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
-  console.log(`🚀 Application is running on: http://localhost:${port}/api`);
+  console.log(`🚀 Application is running on: http://localhost:${port}/api/v1`);
   console.log(`📚 Swagger documentation available at: http://localhost:${port}/docs`);
 }
 
