@@ -1,9 +1,15 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+
 class ApiConstants {
-  static const String baseUrl = 'http://localhost:3000/api';
-  
-  // For Android Emulator, use 10.0.2.2
-  // For real devices, use your computer's local IP
-  static const String androidBaseUrl = 'http://10.0.2.2:3000/api';
+  static String get _host {
+    if (kIsWeb) return 'localhost';
+    if (Platform.isAndroid) return '10.0.2.2';
+    return 'localhost';
+  }
+
+  static String get baseUrl => 'http://$_host:3000/api';
+  static String get socketUrl => 'http://$_host:3000';
 
   // Endpoints
   static const String login = '/auth/login';
@@ -11,4 +17,5 @@ class ApiConstants {
   static const String refresh = '/auth/refresh';
   static const String me = '/auth/me';
   static const String pets = '/pets';
+  static const String interactions = '/interactions';
 }

@@ -8,12 +8,28 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { AuthModule } from './modules/auth/auth.module';
 import { PetsModule } from './modules/pets/pets.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { InteractionsModule } from './modules/interactions/interactions.module';
+import { RedisModule } from './modules/redis/redis.module';
+import { BullModule } from '@nestjs/bullmq';
+import { EventsModule } from './modules/events/events.module';
 
 @Module({
   imports: [
     AuthModule,
     PetsModule,
     StorageModule,
+    InteractionsModule,
+    RedisModule,
+    EventsModule,
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get('REDIS_HOST', 'localhost'),
+          port: configService.get('REDIS_PORT', 6379),
+        },
+      }),
+    }),
     ThrottlerModule.forRoot([{
       ttl: 60000,
       limit: 60,
@@ -42,6 +58,9 @@ import { StorageModule } from './modules/storage/storage.module';
         R2_SECRET_ACCESS_KEY: Joi.string().required(),
         R2_BUCKET_NAME: Joi.string().required(),
         R2_PUBLIC_URL: Joi.string().uri().required(),
+        REDIS_HOST: Joi.string().default('localhost'),
+        REDIS_PORT: Joi.number().default(6379),
+        FRONTEND_URL: Joi.string().uri().default('http://localhost:3000'),
       }),
     }),
     TypeOrmModule.forRootAsync({

@@ -8,6 +8,7 @@ import compression from 'compression';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { RedisIoAdapter } from './modules/events/redis-io.adapter';
 
 async function bootstrap() {
   // 3️⃣ Logging (Better Than console.log) - Structured Logging with Winston
@@ -30,6 +31,11 @@ async function bootstrap() {
       ],
     }),
   });
+
+  // Real-time Redis Adapter for Socket.io
+  const redisIoAdapter = new RedisIoAdapter(app);
+  await redisIoAdapter.connectToRedis();
+  app.useWebSocketAdapter(redisIoAdapter);
 
   // Global Prefix
   app.setGlobalPrefix('api');

@@ -1,15 +1,18 @@
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../data/models/pet.dart';
+import '../providers/interactions_provider.dart';
 
-class PostCard extends StatelessWidget {
+class PostCard extends ConsumerWidget {
   final Pet pet;
 
   const PostCard({super.key, required this.pet});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final interactionsAsync = ref.watch(interactionsProvider(pet.id));
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: const BoxDecoration(
@@ -151,18 +154,41 @@ class PostCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    _ActionButton(
-                      icon: Icons.favorite_border,
-                      onPressed: () {},
+                    interactionsAsync.when(
+                      data: (data) {
+                        final likesCount = data['likesCount'] as int;
+                        return Row(
+                          children: [
+                            _ActionButton(
+                              icon: Icons.favorite_border, // TODO: Add liked status
+                              onPressed: () => ref.read(interactionsProvider(pet.id).notifier).toggleLike(),
+                            ),
+                            Text(
+                              '$likesCount',
+                              style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+                            ),
+                          ],
+                        );
+                      },
+                      loading: () => const SizedBox(width: 40, child: CircularProgressIndicator(strokeWidth: 2)),
+                      error: (_, __) => const Icon(Icons.error_outline),
                     ),
+                    const SizedBox(width: 12),
                     _ActionButton(
                       icon: Icons.chat_bubble_outline,
-                      onPressed: () {},
+                      onPressed: () => context.push('/post-details', extra: pet),
                     ),
-                    _ActionButton(icon: Icons.share_outlined, onPressed: () {}),
+                    _ActionButton(
+                      icon: Icons.share_outlined,
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Social sharing coming soon in Phase 2!')),
+                        );
+                      },
+                    ),
                     const Spacer(),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () => context.push('/post-details', extra: pet),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary.withOpacity(0.15),
                         foregroundColor: AppColors.textPrimary,
@@ -200,8 +226,10 @@ class PostCard extends StatelessWidget {
         return Colors.green;
       case PetStatus.STRAY:
         return Colors.orange;
-      case PetStatus.RESCUED:
+      case PetStatus.rescued:
         return AppColors.primaryDark;
+      case PetStatus.moment:
+        return AppColors.primary;
     }
   }
 }

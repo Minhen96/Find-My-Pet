@@ -1,3 +1,4 @@
+import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../data/models/pet.dart';
 import '../data/repositories/pet_repository.dart';
@@ -16,9 +17,9 @@ class Pets extends _$Pets {
     return await repository.getPets(status: status, type: type);
   }
 
-  Future<void> createPet(Map<String, dynamic> petData) async {
+  Future<void> createPet(Map<String, dynamic> petData, List<XFile> images) async {
     final repository = ref.read(petRepositoryProvider);
-    await repository.createPet(petData);
+    await repository.createPet(petData, images);
     await refresh();
   }
 

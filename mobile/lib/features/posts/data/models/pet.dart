@@ -24,6 +24,8 @@ enum PetStatus {
   stray,
   @JsonValue('RESCUED')
   rescued,
+  @JsonValue('MOMENT')
+  moment,
 }
 
 @freezed

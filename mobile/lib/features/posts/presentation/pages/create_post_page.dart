@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:latlong2/latlong2.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../providers/pets_provider.dart';
@@ -25,6 +28,9 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   
   PetType _selectedType = PetType.dog;
   PetStatus _selectedStatus = PetStatus.lost;
+  LatLng? _pickedLocation;
+  final List<XFile> _selectedImages = [];
+  final ImagePicker _picker = ImagePicker();
   bool _isSubmitting = false;
 
   @override
@@ -36,8 +42,23 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
     super.dispose();
   }
 
+  Future<void> _pickImages() async {
+    final List<XFile> images = await _picker.pickMultiImage();
+    if (images.isNotEmpty) {
+      setState(() {
+        _selectedImages.addAll(images);
+      });
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_pickedLocation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please pick a location on the map.')),
+      );
+      return;
+    }
 
     setState(() => _isSubmitting = true);
 
@@ -49,11 +70,11 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
         'breed': _breedController.text.trim(),
         'color': _colorController.text.trim(),
         'description': _descriptionController.text.trim(),
-        // For now, location and images are hardcoded or left empty as we haven't integrated maps/picking fully here
-        'lastSeenLocation': {'latitude': 3.1390, 'longitude': 101.6869}, // Kuala Lumpur
+        'latitude': _pickedLocation!.latitude,
+        'longitude': _pickedLocation!.longitude,
       };
 
-      await ref.read(petsProvider.notifier).createPet(petData);
+      await ref.read(petsProvider.notifier).createPet(petData, _selectedImages);
       
       if (mounted) {
         context.pop();
@@ -170,6 +191,91 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                   hint: 'Golden/Cream',
                   icon: Icons.color_lens,
                   enabled: !_isSubmitting,
+                ),
+                
+                const SizedBox(height: 20),
+                
+                const AuthFieldLabel(text: 'Photos'),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 100,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _selectedImages.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == _selectedImages.length) {
+                        return GestureDetector(
+                          onTap: _pickImages,
+                          child: Container(
+                            width: 100,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: AppColors.divider.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.add_a_photo, color: AppColors.textHint),
+                          ),
+                        );
+                      }
+                      return Container(
+                        width: 100,
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          image: DecorationImage(
+                            image: FileImage(File(_selectedImages[index].path)),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              right: 4,
+                              top: 4,
+                              child: GestureDetector(
+                                onTap: () => setState(() => _selectedImages.removeAt(index)),
+                                child: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black54,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.close, size: 16, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                
+                const SizedBox(height: 20),
+                
+                const AuthFieldLabel(text: 'Location'),
+                const SizedBox(height: 8),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.location_on, color: Colors.red),
+                  title: Text(
+                    _pickedLocation == null
+                        ? 'Select on Map'
+                        : 'Location Selected (${_pickedLocation!.latitude.toStringAsFixed(4)}, ${_pickedLocation!.longitude.toStringAsFixed(4)})',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: _pickedLocation == null ? AppColors.textHint : AppColors.textPrimary,
+                    ),
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () async {
+                    final result = await context.push<LatLng>('/location-picker');
+                    if (result != null) {
+                      setState(() {
+                        _pickedLocation = result;
+                      });
+                    }
+                  },
                 ),
                 
                 const SizedBox(height: 20),

@@ -7,6 +7,7 @@ Help local communities find missing pets faster using:
 - **Real-time alerts**: Instant notifications for nearby sightings.
 - **Community volunteers**: Mobilizing local helpers.
 - **Vet & council integration**: Official partnership ecosystem.
+- **Community Sharing**: Sharing happy moments and general pet-related content.
 - **AI assistance**: Vision-based pet matching and movement prediction.
 
 ---

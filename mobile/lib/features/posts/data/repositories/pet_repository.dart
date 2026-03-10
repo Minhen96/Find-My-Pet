@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/api/dio_client.dart';
@@ -38,8 +39,22 @@ class PetRepository {
     return Pet.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<Pet> createPet(Map<String, dynamic> petData) async {
-    final response = await _dio.post('/pets', data: petData);
+  Future<Pet> createPet(Map<String, dynamic> petData, List<XFile> images) async {
+    final formData = FormData.fromMap({
+      ...petData,
+      'images': images.isEmpty
+          ? []
+          : await Future.wait(
+              images.map(
+                (file) async => await MultipartFile.fromFile(
+                  file.path,
+                  filename: file.name,
+                ),
+              ),
+            ),
+    });
+
+    final response = await _dio.post('/pets', data: formData);
     return Pet.fromJson(response.data as Map<String, dynamic>);
   }
 }

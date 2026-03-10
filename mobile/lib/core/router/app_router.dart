@@ -11,6 +11,8 @@ import '../../features/map/presentation/pages/map_page.dart';
 import '../../features/alerts/presentation/pages/alerts_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/posts/presentation/pages/create_post_page.dart';
+import '../../features/posts/presentation/pages/location_picker_page.dart';
+import '../../features/posts/presentation/pages/post_details_page.dart';
 
 part 'app_router.g.dart';
 
@@ -45,6 +47,17 @@ GoRouter appRouter(Ref ref) {
       GoRoute(
         path: '/create-post',
         builder: (context, state) => const CreatePostPage(),
+      ),
+      GoRoute(
+        path: '/location-picker',
+        builder: (context, state) => const LocationPickerPage(),
+      ),
+      GoRoute(
+        path: '/post-details',
+        builder: (context, state) {
+          final pet = state.extra as Pet;
+          return PostDetailsPage(pet: pet);
+        },
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
