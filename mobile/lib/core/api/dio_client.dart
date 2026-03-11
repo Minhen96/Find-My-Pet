@@ -11,7 +11,7 @@ part 'dio_client.g.dart';
 Dio dioClient(Ref ref) {
   final dio = Dio(
     BaseOptions(
-      baseUrl: kIsWeb ? ApiConstants.baseUrl : ApiConstants.androidBaseUrl,
+      baseUrl: ApiConstants.baseUrl,
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
       contentType: 'application/json',

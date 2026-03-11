@@ -1,8 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mobile/features/posts/data/models/pet.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../data/models/pet.dart';
 import '../providers/interactions_provider.dart';
 
 class PostCard extends ConsumerWidget {
@@ -32,10 +33,10 @@ class PostCard extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor: AppColors.primary.withOpacity(0.3),
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.3),
                   backgroundImage: pet.poster?.email != null
                       ? NetworkImage(
-                          'https://ui-avatars.com/api/?name=${pet.poster!.fullName}&background=B3DFDC&color=0F172A',
+                          'https://ui-avatars.com/api/?name=${pet.poster!.displayName}&background=B3DFDC&color=0F172A',
                         )
                       : null,
                   child: pet.poster?.email == null
@@ -48,7 +49,7 @@ class PostCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        pet.poster?.fullName ?? 'Anonymous',
+                        pet.poster?.displayName ?? 'Anonymous',
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -113,7 +114,7 @@ class PostCard extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: _getStatusColor(
                           pet.status,
-                        ).withOpacity(0.1),
+                        ).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -121,7 +122,9 @@ class PostCard extends ConsumerWidget {
                         style: GoogleFonts.inter(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: _getStatusColor(pet.status).withOpacity(0.1),
+                          color: _getStatusColor(
+                            pet.status,
+                          ).withValues(alpha: 0.1),
                         ),
                       ),
                     ),
@@ -160,37 +163,54 @@ class PostCard extends ConsumerWidget {
                         return Row(
                           children: [
                             _ActionButton(
-                              icon: Icons.favorite_border, // TODO: Add liked status
-                              onPressed: () => ref.read(interactionsProvider(pet.id).notifier).toggleLike(),
+                              icon: Icons
+                                  .favorite_border, // TODO: Add liked status
+                              onPressed: () => ref
+                                  .read(interactionsProvider(pet.id).notifier)
+                                  .toggleLike(),
                             ),
                             Text(
                               '$likesCount',
-                              style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                           ],
                         );
                       },
-                      loading: () => const SizedBox(width: 40, child: CircularProgressIndicator(strokeWidth: 2)),
+                      loading: () => const SizedBox(
+                        width: 40,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                       error: (_, __) => const Icon(Icons.error_outline),
                     ),
                     const SizedBox(width: 12),
                     _ActionButton(
                       icon: Icons.chat_bubble_outline,
-                      onPressed: () => context.push('/post-details', extra: pet),
+                      onPressed: () =>
+                          context.push('/post-details', extra: pet),
                     ),
                     _ActionButton(
                       icon: Icons.share_outlined,
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Social sharing coming soon in Phase 2!')),
+                          const SnackBar(
+                            content: Text(
+                              'Social sharing coming soon in Phase 2!',
+                            ),
+                          ),
                         );
                       },
                     ),
                     const Spacer(),
                     ElevatedButton(
-                      onPressed: () => context.push('/post-details', extra: pet),
+                      onPressed: () =>
+                          context.push('/post-details', extra: pet),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary.withOpacity(0.15),
+                        backgroundColor: AppColors.primary.withValues(
+                          alpha: 0.15,
+                        ),
                         foregroundColor: AppColors.textPrimary,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(
@@ -220,11 +240,11 @@ class PostCard extends ConsumerWidget {
 
   Color _getStatusColor(PetStatus status) {
     switch (status) {
-      case PetStatus.LOST:
+      case PetStatus.lost:
         return Colors.redAccent;
-      case PetStatus.FOUND:
+      case PetStatus.found:
         return Colors.green;
-      case PetStatus.STRAY:
+      case PetStatus.stray:
         return Colors.orange;
       case PetStatus.rescued:
         return AppColors.primaryDark;

@@ -1,3 +1,5 @@
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../../core/api/dio_client.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/providers/socket_provider.dart';
 
@@ -8,7 +10,7 @@ class Interactions extends _$Interactions {
   @override
   FutureOr<Map<String, dynamic>> build(String petId) async {
     final socket = ref.watch(socketProvider);
-    
+
     // Listen for real-time updates
     socket.on(AppConstants.wsEvents.likeUpdate, (data) {
       if (data['newCount'] != null) {
@@ -20,7 +22,9 @@ class Interactions extends _$Interactions {
     });
 
     socket.on(AppConstants.wsEvents.newComment, (data) {
-      final currentComments = List<dynamic>.from(state.value?['comments'] ?? []);
+      final currentComments = List<dynamic>.from(
+        state.value?['comments'] ?? [],
+      );
       state = AsyncData({
         ...state.value ?? {},
         'comments': [data, ...currentComments],

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Pet {
 
- String get id; PetType get type; PetStatus get status; String get breed; String get color; String? get description; List<String> get images; DateTime? get lastSeenAt; bool get isResolved; User? get poster; DateTime get createdAt; DateTime get updatedAt;
+ String get id; String? get name; PetType get type; PetStatus get status; String get breed; String get color; String? get description; List<String> get images; dynamic get location; DateTime? get lastSeenAt; bool get isResolved; User? get poster; DateTime get createdAt; DateTime get updatedAt;
 /// Create a copy of Pet
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $PetCopyWith<Pet> get copyWith => _$PetCopyWithImpl<Pet>(this as Pet, _$identity
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Pet&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.status, status) || other.status == status)&&(identical(other.breed, breed) || other.breed == breed)&&(identical(other.color, color) || other.color == color)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.images, images)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt)&&(identical(other.isResolved, isResolved) || other.isResolved == isResolved)&&const DeepCollectionEquality().equals(other.poster, poster)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Pet&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.status, status) || other.status == status)&&(identical(other.breed, breed) || other.breed == breed)&&(identical(other.color, color) || other.color == color)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.images, images)&&const DeepCollectionEquality().equals(other.location, location)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt)&&(identical(other.isResolved, isResolved) || other.isResolved == isResolved)&&(identical(other.poster, poster) || other.poster == poster)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,type,status,breed,color,description,const DeepCollectionEquality().hash(images),lastSeenAt,isResolved,const DeepCollectionEquality().hash(poster),createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,name,type,status,breed,color,description,const DeepCollectionEquality().hash(images),const DeepCollectionEquality().hash(location),lastSeenAt,isResolved,poster,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'Pet(id: $id, type: $type, status: $status, breed: $breed, color: $color, description: $description, images: $images, lastSeenAt: $lastSeenAt, isResolved: $isResolved, poster: $poster, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'Pet(id: $id, name: $name, type: $type, status: $status, breed: $breed, color: $color, description: $description, images: $images, location: $location, lastSeenAt: $lastSeenAt, isResolved: $isResolved, poster: $poster, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -48,11 +48,11 @@ abstract mixin class $PetCopyWith<$Res>  {
   factory $PetCopyWith(Pet value, $Res Function(Pet) _then) = _$PetCopyWithImpl;
 @useResult
 $Res call({
- String id, PetType type, PetStatus status, String breed, String color, String? description, List<String> images, DateTime? lastSeenAt, bool isResolved, User? poster, DateTime createdAt, DateTime updatedAt
+ String id, String? name, PetType type, PetStatus status, String breed, String color, String? description, List<String> images, dynamic location, DateTime? lastSeenAt, bool isResolved, User? poster, DateTime createdAt, DateTime updatedAt
 });
 
 
-
+$UserCopyWith<$Res>? get poster;
 
 }
 /// @nodoc
@@ -65,16 +65,18 @@ class _$PetCopyWithImpl<$Res>
 
 /// Create a copy of Pet
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? status = null,Object? breed = null,Object? color = null,Object? description = freezed,Object? images = null,Object? lastSeenAt = freezed,Object? isResolved = null,Object? poster = freezed,Object? createdAt = null,Object? updatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = freezed,Object? type = null,Object? status = null,Object? breed = null,Object? color = null,Object? description = freezed,Object? images = null,Object? location = freezed,Object? lastSeenAt = freezed,Object? isResolved = null,Object? poster = freezed,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as PetType,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as PetStatus,breed: null == breed ? _self.breed : breed // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,images: null == images ? _self.images : images // ignore: cast_nullable_to_non_nullable
-as List<String>,lastSeenAt: freezed == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
+as List<String>,location: freezed == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as dynamic,lastSeenAt: freezed == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,isResolved: null == isResolved ? _self.isResolved : isResolved // ignore: cast_nullable_to_non_nullable
 as bool,poster: freezed == poster ? _self.poster : poster // ignore: cast_nullable_to_non_nullable
 as User?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
@@ -82,7 +84,19 @@ as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore
 as DateTime,
   ));
 }
+/// Create a copy of Pet
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$UserCopyWith<$Res>? get poster {
+    if (_self.poster == null) {
+    return null;
+  }
 
+  return $UserCopyWith<$Res>(_self.poster!, (value) {
+    return _then(_self.copyWith(poster: value));
+  });
+}
 }
 
 
@@ -164,10 +178,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  PetType type,  PetStatus status,  String breed,  String color,  String? description,  List<String> images,  DateTime? lastSeenAt,  bool isResolved,  User? poster,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? name,  PetType type,  PetStatus status,  String breed,  String color,  String? description,  List<String> images,  dynamic location,  DateTime? lastSeenAt,  bool isResolved,  User? poster,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Pet() when $default != null:
-return $default(_that.id,_that.type,_that.status,_that.breed,_that.color,_that.description,_that.images,_that.lastSeenAt,_that.isResolved,_that.poster,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.type,_that.status,_that.breed,_that.color,_that.description,_that.images,_that.location,_that.lastSeenAt,_that.isResolved,_that.poster,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -185,10 +199,10 @@ return $default(_that.id,_that.type,_that.status,_that.breed,_that.color,_that.d
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  PetType type,  PetStatus status,  String breed,  String color,  String? description,  List<String> images,  DateTime? lastSeenAt,  bool isResolved,  User? poster,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? name,  PetType type,  PetStatus status,  String breed,  String color,  String? description,  List<String> images,  dynamic location,  DateTime? lastSeenAt,  bool isResolved,  User? poster,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _Pet():
-return $default(_that.id,_that.type,_that.status,_that.breed,_that.color,_that.description,_that.images,_that.lastSeenAt,_that.isResolved,_that.poster,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.type,_that.status,_that.breed,_that.color,_that.description,_that.images,_that.location,_that.lastSeenAt,_that.isResolved,_that.poster,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +219,10 @@ return $default(_that.id,_that.type,_that.status,_that.breed,_that.color,_that.d
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  PetType type,  PetStatus status,  String breed,  String color,  String? description,  List<String> images,  DateTime? lastSeenAt,  bool isResolved,  User? poster,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? name,  PetType type,  PetStatus status,  String breed,  String color,  String? description,  List<String> images,  dynamic location,  DateTime? lastSeenAt,  bool isResolved,  User? poster,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Pet() when $default != null:
-return $default(_that.id,_that.type,_that.status,_that.breed,_that.color,_that.description,_that.images,_that.lastSeenAt,_that.isResolved,_that.poster,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.type,_that.status,_that.breed,_that.color,_that.description,_that.images,_that.location,_that.lastSeenAt,_that.isResolved,_that.poster,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -220,10 +234,11 @@ return $default(_that.id,_that.type,_that.status,_that.breed,_that.color,_that.d
 @JsonSerializable()
 
 class _Pet implements Pet {
-  const _Pet({required this.id, required this.type, required this.status, required this.breed, required this.color, this.description, final  List<String> images = const [], this.lastSeenAt, this.isResolved = false, this.poster, required this.createdAt, required this.updatedAt}): _images = images;
+  const _Pet({required this.id, this.name, required this.type, required this.status, required this.breed, required this.color, this.description, final  List<String> images = const [], this.location, this.lastSeenAt, this.isResolved = false, this.poster, required this.createdAt, required this.updatedAt}): _images = images;
   factory _Pet.fromJson(Map<String, dynamic> json) => _$PetFromJson(json);
 
 @override final  String id;
+@override final  String? name;
 @override final  PetType type;
 @override final  PetStatus status;
 @override final  String breed;
@@ -236,6 +251,7 @@ class _Pet implements Pet {
   return EqualUnmodifiableListView(_images);
 }
 
+@override final  dynamic location;
 @override final  DateTime? lastSeenAt;
 @override@JsonKey() final  bool isResolved;
 @override final  User? poster;
@@ -255,16 +271,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Pet&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.status, status) || other.status == status)&&(identical(other.breed, breed) || other.breed == breed)&&(identical(other.color, color) || other.color == color)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other._images, _images)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt)&&(identical(other.isResolved, isResolved) || other.isResolved == isResolved)&&const DeepCollectionEquality().equals(other.poster, poster)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Pet&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.status, status) || other.status == status)&&(identical(other.breed, breed) || other.breed == breed)&&(identical(other.color, color) || other.color == color)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other._images, _images)&&const DeepCollectionEquality().equals(other.location, location)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt)&&(identical(other.isResolved, isResolved) || other.isResolved == isResolved)&&(identical(other.poster, poster) || other.poster == poster)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,type,status,breed,color,description,const DeepCollectionEquality().hash(_images),lastSeenAt,isResolved,const DeepCollectionEquality().hash(poster),createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,name,type,status,breed,color,description,const DeepCollectionEquality().hash(_images),const DeepCollectionEquality().hash(location),lastSeenAt,isResolved,poster,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'Pet(id: $id, type: $type, status: $status, breed: $breed, color: $color, description: $description, images: $images, lastSeenAt: $lastSeenAt, isResolved: $isResolved, poster: $poster, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'Pet(id: $id, name: $name, type: $type, status: $status, breed: $breed, color: $color, description: $description, images: $images, location: $location, lastSeenAt: $lastSeenAt, isResolved: $isResolved, poster: $poster, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -275,11 +291,11 @@ abstract mixin class _$PetCopyWith<$Res> implements $PetCopyWith<$Res> {
   factory _$PetCopyWith(_Pet value, $Res Function(_Pet) _then) = __$PetCopyWithImpl;
 @override @useResult
 $Res call({
- String id, PetType type, PetStatus status, String breed, String color, String? description, List<String> images, DateTime? lastSeenAt, bool isResolved, User? poster, DateTime createdAt, DateTime updatedAt
+ String id, String? name, PetType type, PetStatus status, String breed, String color, String? description, List<String> images, dynamic location, DateTime? lastSeenAt, bool isResolved, User? poster, DateTime createdAt, DateTime updatedAt
 });
 
 
-
+@override $UserCopyWith<$Res>? get poster;
 
 }
 /// @nodoc
@@ -292,16 +308,18 @@ class __$PetCopyWithImpl<$Res>
 
 /// Create a copy of Pet
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? type = null,Object? status = null,Object? breed = null,Object? color = null,Object? description = freezed,Object? images = null,Object? lastSeenAt = freezed,Object? isResolved = null,Object? poster = freezed,Object? createdAt = null,Object? updatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = freezed,Object? type = null,Object? status = null,Object? breed = null,Object? color = null,Object? description = freezed,Object? images = null,Object? location = freezed,Object? lastSeenAt = freezed,Object? isResolved = null,Object? poster = freezed,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_Pet(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as PetType,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as PetStatus,breed: null == breed ? _self.breed : breed // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,images: null == images ? _self._images : images // ignore: cast_nullable_to_non_nullable
-as List<String>,lastSeenAt: freezed == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
+as List<String>,location: freezed == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as dynamic,lastSeenAt: freezed == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,isResolved: null == isResolved ? _self.isResolved : isResolved // ignore: cast_nullable_to_non_nullable
 as bool,poster: freezed == poster ? _self.poster : poster // ignore: cast_nullable_to_non_nullable
 as User?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
@@ -310,7 +328,19 @@ as DateTime,
   ));
 }
 
+/// Create a copy of Pet
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$UserCopyWith<$Res>? get poster {
+    if (_self.poster == null) {
+    return null;
+  }
 
+  return $UserCopyWith<$Res>(_self.poster!, (value) {
+    return _then(_self.copyWith(poster: value));
+  });
+}
 }
 
 // dart format on

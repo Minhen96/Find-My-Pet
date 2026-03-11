@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -39,7 +41,10 @@ class PetRepository {
     return Pet.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<Pet> createPet(Map<String, dynamic> petData, List<XFile> images) async {
+  Future<Pet> createPet(
+    Map<String, dynamic> petData,
+    List<XFile> images,
+  ) async {
     final List<String> directImageUrls = [];
     final List<XFile> fallbackImages = [];
 
@@ -83,10 +88,10 @@ class PetRepository {
     }
 
     // 3. Create the Pet Post with whatever URLs we got
-    final response = await _dio.post('/pets', data: {
-      ...petData,
-      'imageUrls': directImageUrls,
-    });
+    final response = await _dio.post(
+      '/pets',
+      data: {...petData, 'imageUrls': directImageUrls},
+    );
 
     final createdPet = Pet.fromJson(response.data as Map<String, dynamic>);
 
@@ -95,13 +100,16 @@ class PetRepository {
       for (final image in fallbackImages) {
         try {
           final formData = FormData.fromMap({
-            'file': await MultipartFile.fromFile(image.path, filename: image.name),
+            'file': await MultipartFile.fromFile(
+              image.path,
+              filename: image.name,
+            ),
             'petId': createdPet.id,
           });
           await _dio.post('/media/upload-fallback', data: formData);
         } catch (e) {
           // If even fallback fails, we log it, but the post is already created
-          print('Critical: Fallback upload failed for ${image.name}');
+          debugPrint('Critical: Fallback upload failed for ${image.name}');
         }
       }
     }
@@ -110,14 +118,23 @@ class PetRepository {
   }
 
   String _getContentType(String fileName) {
-    if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) return 'image/jpeg';
-    if (fileName.endsWith('.png')) return 'image/png';
-    if (fileName.endsWith('.gif')) return 'image/gif';
+    if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) {
+      return 'image/jpeg';
+    }
+    if (fileName.endsWith('.png')) {
+      return 'image/png';
+    }
+    if (fileName.endsWith('.gif')) {
+      return 'image/gif';
+    }
     return 'application/octet-stream';
   }
 
   Future<Pet> updatePet(
-      String id, Map<String, dynamic> petData, List<XFile> images) async {
+    String id,
+    Map<String, dynamic> petData,
+    List<XFile> images,
+  ) async {
     final List<String> directImageUrls = [];
     final List<XFile> fallbackImages = [];
 
@@ -152,10 +169,10 @@ class PetRepository {
       }
     }
 
-    final response = await _dio.patch('/pets/$id', data: {
-      ...petData,
-      'imageUrls': directImageUrls,
-    });
+    final response = await _dio.patch(
+      '/pets/$id',
+      data: {...petData, 'imageUrls': directImageUrls},
+    );
 
     final updatedPet = Pet.fromJson(response.data as Map<String, dynamic>);
 
@@ -163,11 +180,16 @@ class PetRepository {
       for (final image in fallbackImages) {
         try {
           final formData = FormData.fromMap({
-            'file': await MultipartFile.fromFile(image.path, filename: image.name),
+            'file': await MultipartFile.fromFile(
+              image.path,
+              filename: image.name,
+            ),
             'petId': updatedPet.id,
           });
           await _dio.post('/media/upload-fallback', data: formData);
-        } catch (e) {}
+        } catch (_) {
+          // Fallback upload failed silently — post is already created
+        }
       }
     }
 

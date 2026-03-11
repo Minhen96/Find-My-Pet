@@ -4,13 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:latlong2/latlong2.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../providers/pets_provider.dart';
-import '../../auth/presentation/widgets/auth_field_label.dart';
-import '../../auth/presentation/widgets/auth_text_field.dart';
-import '../models/pet.dart';
+import 'package:mobile/features/auth/presentation/widgets/auth_field_label.dart';
+import 'package:mobile/features/auth/presentation/widgets/auth_text_field.dart';
+import 'package:mobile/features/posts/data/models/pet.dart';
 
 class CreatePostPage extends ConsumerStatefulWidget {
   const CreatePostPage({super.key});
@@ -25,7 +25,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   final _breedController = TextEditingController();
   final _colorController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   PetType _selectedType = PetType.dog;
   PetStatus _selectedStatus = PetStatus.lost;
   LatLng? _pickedLocation;
@@ -75,7 +75,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
       };
 
       await ref.read(petsProvider.notifier).createPet(petData, _selectedImages);
-      
+
       if (mounted) {
         context.pop();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -84,9 +84,9 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create post: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to create post: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -122,9 +122,9 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                   icon: Icons.pets,
                   enabled: !_isSubmitting,
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 Row(
                   children: [
                     Expanded(
@@ -134,7 +134,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                           const AuthFieldLabel(text: 'Type'),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<PetType>(
-                            value: _selectedType,
+                            initialValue: _selectedType,
                             decoration: _dropdownDecoration(),
                             items: PetType.values.map((type) {
                               return DropdownMenuItem(
@@ -142,7 +142,9 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                                 child: Text(type.name.toUpperCase()),
                               );
                             }).toList(),
-                            onChanged: _isSubmitting ? null : (v) => setState(() => _selectedType = v!),
+                            onChanged: _isSubmitting
+                                ? null
+                                : (v) => setState(() => _selectedType = v!),
                           ),
                         ],
                       ),
@@ -155,7 +157,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                           const AuthFieldLabel(text: 'Status'),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<PetStatus>(
-                            value: _selectedStatus,
+                            initialValue: _selectedStatus,
                             decoration: _dropdownDecoration(),
                             items: PetStatus.values.map((status) {
                               return DropdownMenuItem(
@@ -163,16 +165,18 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                                 child: Text(status.name.toUpperCase()),
                               );
                             }).toList(),
-                            onChanged: _isSubmitting ? null : (v) => setState(() => _selectedStatus = v!),
+                            onChanged: _isSubmitting
+                                ? null
+                                : (v) => setState(() => _selectedStatus = v!),
                           ),
                         ],
                       ),
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 const AuthFieldLabel(text: 'Breed'),
                 const SizedBox(height: 8),
                 AuthTextField(
@@ -181,9 +185,9 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                   icon: Icons.category,
                   enabled: !_isSubmitting,
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 const AuthFieldLabel(text: 'Color'),
                 const SizedBox(height: 8),
                 AuthTextField(
@@ -192,9 +196,9 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                   icon: Icons.color_lens,
                   enabled: !_isSubmitting,
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 const AuthFieldLabel(text: 'Photos'),
                 const SizedBox(height: 8),
                 SizedBox(
@@ -210,10 +214,13 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                             width: 100,
                             margin: const EdgeInsets.only(right: 8),
                             decoration: BoxDecoration(
-                              color: AppColors.divider.withOpacity(0.3),
+                              color: AppColors.divider.withValues(alpha: 0.3),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(Icons.add_a_photo, color: AppColors.textHint),
+                            child: const Icon(
+                              Icons.add_a_photo,
+                              color: AppColors.textHint,
+                            ),
                           ),
                         );
                       }
@@ -233,14 +240,20 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                               right: 4,
                               top: 4,
                               child: GestureDetector(
-                                onTap: () => setState(() => _selectedImages.removeAt(index)),
+                                onTap: () => setState(
+                                  () => _selectedImages.removeAt(index),
+                                ),
                                 child: Container(
                                   padding: const EdgeInsets.all(2),
                                   decoration: const BoxDecoration(
                                     color: Colors.black54,
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Icon(Icons.close, size: 16, color: Colors.white),
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                             ),
@@ -250,9 +263,9 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                     },
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 const AuthFieldLabel(text: 'Location'),
                 const SizedBox(height: 8),
                 ListTile(
@@ -264,12 +277,16 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                         : 'Location Selected (${_pickedLocation!.latitude.toStringAsFixed(4)}, ${_pickedLocation!.longitude.toStringAsFixed(4)})',
                     style: GoogleFonts.inter(
                       fontSize: 14,
-                      color: _pickedLocation == null ? AppColors.textHint : AppColors.textPrimary,
+                      color: _pickedLocation == null
+                          ? AppColors.textHint
+                          : AppColors.textPrimary,
                     ),
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () async {
-                    final result = await context.push<LatLng>('/location-picker');
+                    final result = await context.push<LatLng>(
+                      '/location-picker',
+                    );
                     if (result != null) {
                       setState(() {
                         _pickedLocation = result;
@@ -277,9 +294,9 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                     }
                   },
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 const AuthFieldLabel(text: 'Description'),
                 const SizedBox(height: 8),
                 TextField(
@@ -300,9 +317,9 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -310,7 +327,9 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       backgroundColor: AppColors.primary,
-                      shape: BorderRadius.circular(12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: _isSubmitting
                         ? const CircularProgressIndicator()

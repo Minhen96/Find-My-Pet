@@ -4,13 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:latlong2/latlong2.dart';
-
+import 'package:latlong2/latlong.dart';
+import 'package:mobile/features/auth/presentation/widgets/auth_field_label.dart';
+import 'package:mobile/features/auth/presentation/widgets/auth_text_field.dart';
+import 'package:mobile/features/posts/data/models/pet.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/pets_provider.dart';
-import '../../auth/presentation/widgets/auth_field_label.dart';
-import '../../auth/presentation/widgets/auth_text_field.dart';
-import '../models/pet.dart';
 
 class EditPetPage extends ConsumerStatefulWidget {
   final Pet pet;
@@ -26,7 +25,7 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
   late TextEditingController _breedController;
   late TextEditingController _colorController;
   late TextEditingController _descriptionController;
-  
+
   late PetType _selectedType;
   late PetStatus _selectedStatus;
   LatLng? _pickedLocation;
@@ -40,10 +39,15 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
     _nameController = TextEditingController(text: widget.pet.name);
     _breedController = TextEditingController(text: widget.pet.breed);
     _colorController = TextEditingController(text: widget.pet.color);
-    _descriptionController = TextEditingController(text: widget.pet.description);
+    _descriptionController = TextEditingController(
+      text: widget.pet.description,
+    );
     _selectedType = widget.pet.type;
     _selectedStatus = widget.pet.status;
-    _pickedLocation = LatLng(widget.pet.location.coordinates[1], widget.pet.location.coordinates[0]);
+    _pickedLocation = LatLng(
+      widget.pet.location.coordinates[1],
+      widget.pet.location.coordinates[0],
+    );
   }
 
   @override
@@ -81,8 +85,10 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
         'longitude': _pickedLocation?.longitude,
       };
 
-      await ref.read(petsProvider.notifier).updatePet(widget.pet.id, petData, _selectedImages);
-      
+      await ref
+          .read(petsProvider.notifier)
+          .updatePet(widget.pet.id, petData, _selectedImages);
+
       if (mounted) {
         context.pop();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -91,9 +97,9 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update post: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to update post: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -126,9 +132,9 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
                   icon: Icons.pets,
                   enabled: !_isSubmitting,
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 Row(
                   children: [
                     Expanded(
@@ -138,7 +144,7 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
                           const AuthFieldLabel(text: 'Type'),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<PetType>(
-                            value: _selectedType,
+                            initialValue: _selectedType,
                             decoration: _dropdownDecoration(),
                             items: PetType.values.map((type) {
                               return DropdownMenuItem(
@@ -146,7 +152,9 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
                                 child: Text(type.name.toUpperCase()),
                               );
                             }).toList(),
-                            onChanged: _isSubmitting ? null : (v) => setState(() => _selectedType = v!),
+                            onChanged: _isSubmitting
+                                ? null
+                                : (v) => setState(() => _selectedType = v!),
                           ),
                         ],
                       ),
@@ -159,7 +167,7 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
                           const AuthFieldLabel(text: 'Status'),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<PetStatus>(
-                            value: _selectedStatus,
+                            initialValue: _selectedStatus,
                             decoration: _dropdownDecoration(),
                             items: PetStatus.values.map((status) {
                               return DropdownMenuItem(
@@ -167,16 +175,18 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
                                 child: Text(status.name.toUpperCase()),
                               );
                             }).toList(),
-                            onChanged: _isSubmitting ? null : (v) => setState(() => _selectedStatus = v!),
+                            onChanged: _isSubmitting
+                                ? null
+                                : (v) => setState(() => _selectedStatus = v!),
                           ),
                         ],
                       ),
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 const AuthFieldLabel(text: 'Breed'),
                 const SizedBox(height: 8),
                 AuthTextField(
@@ -185,9 +195,9 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
                   icon: Icons.category,
                   enabled: !_isSubmitting,
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 const AuthFieldLabel(text: 'Color'),
                 const SizedBox(height: 8),
                 AuthTextField(
@@ -196,9 +206,9 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
                   icon: Icons.color_lens,
                   enabled: !_isSubmitting,
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 const AuthFieldLabel(text: 'Add More Photos'),
                 const SizedBox(height: 8),
                 SizedBox(
@@ -214,10 +224,13 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
                             width: 100,
                             margin: const EdgeInsets.only(right: 8),
                             decoration: BoxDecoration(
-                              color: AppColors.divider.withOpacity(0.3),
+                              color: AppColors.divider.withValues(alpha: 0.3),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(Icons.add_a_photo, color: AppColors.textHint),
+                            child: const Icon(
+                              Icons.add_a_photo,
+                              color: AppColors.textHint,
+                            ),
                           ),
                         );
                       }
@@ -237,14 +250,20 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
                               right: 4,
                               top: 4,
                               child: GestureDetector(
-                                onTap: () => setState(() => _selectedImages.removeAt(index)),
+                                onTap: () => setState(
+                                  () => _selectedImages.removeAt(index),
+                                ),
                                 child: Container(
                                   padding: const EdgeInsets.all(2),
                                   decoration: const BoxDecoration(
                                     color: Colors.black54,
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Icon(Icons.close, size: 16, color: Colors.white),
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                             ),
@@ -254,9 +273,9 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
                     },
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 const AuthFieldLabel(text: 'Location'),
                 const SizedBox(height: 8),
                 ListTile(
@@ -273,7 +292,9 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () async {
-                    final result = await context.push<LatLng>('/location-picker');
+                    final result = await context.push<LatLng>(
+                      '/location-picker',
+                    );
                     if (result != null) {
                       setState(() {
                         _pickedLocation = result;
@@ -281,9 +302,9 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
                     }
                   },
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 const AuthFieldLabel(text: 'Description'),
                 const SizedBox(height: 8),
                 TextField(
@@ -300,9 +321,9 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -310,7 +331,9 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       backgroundColor: AppColors.primary,
-                      shape: BorderRadius.circular(12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: _isSubmitting
                         ? const CircularProgressIndicator()

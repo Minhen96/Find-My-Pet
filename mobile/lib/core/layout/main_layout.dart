@@ -6,10 +6,7 @@ import '../theme/app_colors.dart';
 class MainLayout extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
-  const MainLayout({
-    super.key,
-    required this.navigationShell,
-  });
+  const MainLayout({super.key, required this.navigationShell});
 
   void _onItemTapped(int index) {
     navigationShell.goBranch(
@@ -26,7 +23,7 @@ class MainLayout extends StatelessWidget {
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: _onItemTapped,
         backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.primary.withOpacity(0.3),
+        indicatorColor: AppColors.primary.withValues(alpha: 0.3),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.groups_outlined),

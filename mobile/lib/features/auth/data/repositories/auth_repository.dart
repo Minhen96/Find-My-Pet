@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:mobile/features/auth/data/models/user.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/api/dio_client.dart';
@@ -14,10 +15,7 @@ class AuthRepository {
   Future<AuthResponse> login(String email, String password) async {
     final response = await _dio.post(
       '/auth/login',
-      data: {
-        'email': email,
-        'password': password,
-      },
+      data: {'email': email, 'password': password},
     );
     return AuthResponse.fromJson(response.data as Map<String, dynamic>);
   }

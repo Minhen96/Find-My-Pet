@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/features/posts/data/models/pet.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -28,18 +29,17 @@ GoRouter appRouter(Ref ref) {
     initialLocation: '/dashboard',
     redirect: (context, state) {
       final isAuth = authState.value != null; // User is logged in
-      final isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+      final isLoggingIn =
+          state.matchedLocation == '/login' ||
+          state.matchedLocation == '/register';
 
       if (!isAuth && !isLoggingIn) return '/login';
       if (isAuth && isLoggingIn) return '/dashboard';
-      
+
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginPage(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterPage(),

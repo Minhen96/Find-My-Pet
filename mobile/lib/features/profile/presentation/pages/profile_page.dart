@@ -1,9 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../posts/presentation/widgets/pet_card.dart';
+import '../../../posts/presentation/widgets/post_card.dart';
 import '../../../posts/presentation/providers/pets_provider.dart';
 
 class ProfilePage extends ConsumerWidget {
@@ -49,7 +49,11 @@ class ProfilePage extends ConsumerWidget {
                             ? NetworkImage(user.avatarUrl!)
                             : null,
                         child: (user.avatarUrl == null)
-                            ? const Icon(Icons.person, size: 40, color: AppColors.primary)
+                            ? const Icon(
+                                Icons.person,
+                                size: 40,
+                                color: AppColors.primary,
+                              )
                             : null,
                       ),
                       const SizedBox(height: 12),
@@ -95,7 +99,8 @@ class ProfilePage extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    user.bio ?? 'No bio yet. Tell the community about yourself!',
+                    user.bio ??
+                        'No bio yet. Tell the community about yourself!',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       color: AppColors.textSecondary,
@@ -117,17 +122,21 @@ class ProfilePage extends ConsumerWidget {
           ),
           petsState.when(
             data: (pets) {
-              final myPets = pets.where((p) => p.poster.id == user.id).toList();
+              final myPets = pets
+                  .where((p) => p.poster?.id == user.id)
+                  .toList();
               if (myPets.isEmpty) {
                 return const SliverToBoxAdapter(
-                  child: Center(child: Text('You haven\'t posted any pets yet.')),
+                  child: Center(
+                    child: Text('You haven\'t posted any pets yet.'),
+                  ),
                 );
               }
               return SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    (context, index) => PetCard(pet: myPets[index]),
+                    (context, index) => PostCard(pet: myPets[index]),
                     childCount: myPets.length,
                   ),
                 ),
@@ -176,13 +185,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   Future<void> _save() async {
     final name = _nameController.text.trim();
     final bio = _bioController.text.trim();
-    
+
     if (name.isEmpty) return;
 
-    await ref.read(authProvider.notifier).updateProfile(
-      displayName: name,
-      bio: bio,
-    );
+    await ref
+        .read(authProvider.notifier)
+        .updateProfile(displayName: name, bio: bio);
 
     if (mounted) {
       Navigator.of(context).pop();
@@ -211,10 +219,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               ),
             )
           else
-            TextButton(
-              onPressed: _save,
-              child: const Text('Save'),
-            ),
+            TextButton(onPressed: _save, child: const Text('Save')),
         ],
       ),
       body: SingleChildScrollView(
@@ -232,7 +237,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                         ? NetworkImage(authState.value!.avatarUrl!)
                         : null,
                     child: (authState.value?.avatarUrl == null)
-                        ? const Icon(Icons.person, size: 50, color: AppColors.textHint)
+                        ? const Icon(
+                            Icons.person,
+                            size: 50,
+                            color: AppColors.textHint,
+                          )
                         : null,
                   ),
                   Positioned(
@@ -244,7 +253,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                         color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.camera_alt, size: 20, color: Colors.white),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        size: 20,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ],
@@ -255,9 +268,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             const SizedBox(height: 8),
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                hintText: 'Enter your name',
-              ),
+              decoration: const InputDecoration(hintText: 'Enter your name'),
               enabled: !isLoading,
             ),
             const SizedBox(height: 24),

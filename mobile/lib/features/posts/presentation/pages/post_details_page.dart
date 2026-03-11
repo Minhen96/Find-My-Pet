@@ -1,14 +1,15 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:latlong2/latlong2.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/providers/socket_provider.dart';
-import '../data/models/pet.dart';
+import 'package:mobile/features/posts/data/models/pet.dart';
 import '../providers/interactions_provider.dart';
-import '../../auth/presentation/providers/auth_provider.dart'; // Add auth
+import 'package:mobile/features/auth/presentation/providers/auth_provider.dart';
 import '../providers/pets_provider.dart'; // Add pets provider for delete
 import './edit_pet_page.dart'; // Add edit page
 
@@ -26,13 +27,17 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(socketProvider).emit(AppConstants.wsEvents.joinPet, widget.pet.id);
+      ref
+          .read(socketProvider)
+          .emit(AppConstants.wsEvents.joinPet, widget.pet.id);
     });
   }
 
   @override
   void dispose() {
-    ref.read(socketProvider).emit(AppConstants.wsEvents.leavePet, widget.pet.id);
+    ref
+        .read(socketProvider)
+        .emit(AppConstants.wsEvents.leavePet, widget.pet.id);
     super.dispose();
   }
 
@@ -43,7 +48,10 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
         title: const Text('Delete Post?'),
         content: const Text('This action cannot be undone.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -57,16 +65,16 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
       try {
         await ref.read(petsProvider.notifier).deletePet(widget.pet.id);
         if (mounted) {
-          context.pop(); // Go back to feed
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Post deleted')),
-          );
+          Navigator.of(context).pop(); // Go back to feed
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Post deleted')));
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
         }
       }
     }
@@ -79,14 +87,16 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          pet.status == PetStatus.moment ? 'Moment Details' : 'Pet Details',
+          widget.pet.status == PetStatus.moment
+              ? 'Moment Details'
+              : 'Pet Details',
           style: GoogleFonts.inter(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: AppColors.textPrimary,
         actions: [
-          if (ref.watch(authProvider).value?.id == widget.pet.poster.id) ...[
+          if (ref.watch(authProvider).value?.id == widget.pet.poster?.id) ...[
             IconButton(
               icon: const Icon(Icons.edit_outlined),
               onPressed: () => Navigator.of(context).push(
@@ -105,14 +115,14 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image Carousel
-            if (pet.images.isNotEmpty)
+            if (widget.pet.images.isNotEmpty)
               AspectRatio(
                 aspectRatio: 1.2,
                 child: PageView.builder(
-                  itemCount: pet.images.length,
+                  itemCount: widget.pet.images.length,
                   itemBuilder: (context, index) {
                     return Image.network(
-                      pet.images[index],
+                      widget.pet.images[index],
                       fit: BoxFit.cover,
                     );
                   },
@@ -123,7 +133,11 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                 height: 250,
                 width: double.infinity,
                 color: AppColors.inputBackground,
-                child: const Icon(Icons.pets, size: 80, color: AppColors.primary),
+                child: const Icon(
+                  Icons.pets,
+                  size: 80,
+                  color: AppColors.primary,
+                ),
               ),
 
             Padding(
@@ -133,10 +147,10 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                 children: [
                   Row(
                     children: [
-                      _StatusBadge(status: pet.status),
+                      _StatusBadge(status: widget.pet.status),
                       const SizedBox(width: 8),
                       Text(
-                        '${pet.type.name.toUpperCase()} • ${pet.breed}',
+                        '${widget.pet.type.name.toUpperCase()} • ${widget.pet.breed}',
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -147,7 +161,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    pet.name,
+                    widget.pet.name ?? 'Unknown',
                     style: GoogleFonts.inter(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -156,7 +170,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Color: ${pet.color}',
+                    'Color: ${widget.pet.color}',
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       color: AppColors.textSecondary,
@@ -174,7 +188,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    pet.description ?? 'No description provided.',
+                    widget.pet.description ?? 'No description provided.',
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       height: 1.5,
@@ -183,7 +197,9 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                   ),
                   const SizedBox(height: 30),
                   Text(
-                    pet.status == PetStatus.moment ? 'Captured Location' : 'Last Seen Location',
+                    widget.pet.status == PetStatus.moment
+                        ? 'Captured Location'
+                        : 'Last Seen Location',
                     style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -197,21 +213,30 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                       child: FlutterMap(
                         options: MapOptions(
                           initialCenter: LatLng(
-                            pet.lastSeenLocation.latitude,
-                            pet.lastSeenLocation.longitude,
+                            widget.pet.location?['coordinates']?[1]
+                                    ?.toDouble() ??
+                                3.139,
+                            widget.pet.location?['coordinates']?[0]
+                                    ?.toDouble() ??
+                                101.687,
                           ),
                           initialZoom: 15,
                         ),
                         children: [
                           TileLayer(
-                            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            urlTemplate:
+                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                           ),
                           MarkerLayer(
                             markers: [
                               Marker(
                                 point: LatLng(
-                                  pet.lastSeenLocation.latitude,
-                                  pet.lastSeenLocation.longitude,
+                                  widget.pet.location?['coordinates']?[1]
+                                          ?.toDouble() ??
+                                      3.139,
+                                  widget.pet.location?['coordinates']?[0]
+                                          ?.toDouble() ??
+                                      101.687,
                                 ),
                                 width: 40,
                                 height: 40,
@@ -291,18 +316,22 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                         },
                       );
                     },
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (e, __) => Text('Error loading comments: $e'),
                   ),
                   const SizedBox(height: 12),
-                  _CommentInput(petId: pet.id),
+                  _CommentInput(petId: widget.pet.id),
                 ],
               ),
             ),
           ],
         ),
       ),
-...
+    );
+  }
+}
+
 class _CommentInput extends ConsumerStatefulWidget {
   final String petId;
   const _CommentInput({required this.petId});
@@ -327,7 +356,9 @@ class _CommentInputState extends ConsumerState<_CommentInput> {
 
     setState(() => _isSending = true);
     try {
-      await ref.read(interactionsProvider(widget.petId).notifier).addComment(text);
+      await ref
+          .read(interactionsProvider(widget.petId).notifier)
+          .addComment(text);
       _controller.clear();
     } finally {
       if (mounted) setState(() => _isSending = false);
@@ -359,48 +390,15 @@ class _CommentInputState extends ConsumerState<_CommentInput> {
           ),
           IconButton(
             icon: _isSending
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 : const Icon(Icons.send, color: AppColors.primary),
             onPressed: _isSending ? null : _send,
           ),
         ],
-      ),
-    );
-  }
-}
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.chat_bubble_outline),
-                  label: const Text('Message'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.phone),
-                  label: const Text('Call Now'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -431,7 +429,7 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(

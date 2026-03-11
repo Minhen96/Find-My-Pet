@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../presentation/providers/auth_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/auth_provider.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
@@ -33,13 +33,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   Future<void> _save() async {
     final name = _nameController.text.trim();
     final bio = _bioController.text.trim();
-    
+
     if (name.isEmpty) return;
 
-    await ref.read(authProvider.notifier).updateProfile(
-      displayName: name,
-      bio: bio,
-    );
+    await ref
+        .read(authProvider.notifier)
+        .updateProfile(displayName: name, bio: bio);
 
     if (mounted) {
       Navigator.of(context).pop();
@@ -68,10 +67,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               ),
             )
           else
-            TextButton(
-              onPressed: _save,
-              child: const Text('Save'),
-            ),
+            TextButton(onPressed: _save, child: const Text('Save')),
         ],
       ),
       body: SingleChildScrollView(
@@ -89,7 +85,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                         ? NetworkImage(authState.value!.avatarUrl!)
                         : null,
                     child: (authState.value?.avatarUrl == null)
-                        ? const Icon(Icons.person, size: 50, color: AppColors.textHint)
+                        ? const Icon(
+                            Icons.person,
+                            size: 50,
+                            color: AppColors.textHint,
+                          )
                         : null,
                   ),
                   Positioned(
@@ -101,7 +101,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                         color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.camera_alt, size: 20, color: Colors.white),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        size: 20,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ],
@@ -112,9 +116,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             const SizedBox(height: 8),
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                hintText: 'Enter your name',
-              ),
+              decoration: const InputDecoration(hintText: 'Enter your name'),
               enabled: !isLoading,
             ),
             const SizedBox(height: 24),
