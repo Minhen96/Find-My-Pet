@@ -18,7 +18,11 @@ class PetRepository {
     PetStatus? status,
     PetType? type,
     int limit = 20,
-    int offset = 0,
+    // --- Cursor Pagination ---
+    // Instead of `offset=20`, we pass `cursor="2026-03-11T10:00:00Z"`.
+    // The cursor is the `createdAt` timestamp of the last loaded pet.
+    // The backend uses this to fetch older pets quickly without shifting/duplicates.
+    String? cursor,
   }) async {
     final response = await _dio.get(
       '/pets',
@@ -26,7 +30,7 @@ class PetRepository {
         if (status != null) 'status': status.name.toUpperCase(),
         if (type != null) 'type': type.name.toUpperCase(),
         'limit': limit,
-        'offset': offset,
+        if (cursor != null) 'cursor': cursor,
       },
     );
 

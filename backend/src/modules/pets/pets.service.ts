@@ -112,7 +112,19 @@ export class PetsService {
                     },
                 );
             }
+
+            if (query.cursor) {
+                // --- Cursor Pagination Logic ---
+                // 1. A cursor here is the `createdAt` timestamp of the LAST item the frontend received.
+                // 2. We query for pets created BEFORE that timestamp (createdAt < :cursor).
+                // 3. Because we 'ORDER BY pet.createdAt DESC', we naturally get the next oldest chunk.
+                // 4. This avoids DB "offset scanning" overhead and prevents new posts from shifting the feed!
+                const cursorDate = new Date(query.cursor);
+                queryBuilder.andWhere('pet.createdAt < :cursor', { cursor: cursorDate });
+            }
         }
+
+        queryBuilder.take(query?.limit || 20);
 
         const pets = await queryBuilder.getMany();
 

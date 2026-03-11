@@ -30,4 +30,14 @@ export class FindPetsDto {
     @Min(0)
     @Type(() => Number)
     radius?: number; // In meters
+
+    // --- Pagination ---
+    @IsOptional()
+    @IsNumber()
+    @Min(1)
+    @Type(() => Number)
+    limit?: number; // Number of items to fetch
+
+    @IsOptional()
+    cursor?: string; // Cursor for infinite scrolling (timestamp of the last item)
 }
