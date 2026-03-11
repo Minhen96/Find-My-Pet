@@ -1,6 +1,9 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/services/secure_storage_service.dart';
+import '../../../../core/utils/error_utils.dart';
 import '../../data/models/user.dart';
 import '../../data/repositories/auth_repository.dart';
 
@@ -12,7 +15,7 @@ class Auth extends _$Auth {
   FutureOr<User?> build() async {
     final secureStorage = ref.read(secureStorageProvider);
     final token = await secureStorage.getAccessToken();
-    
+
     if (token != null && token.isNotEmpty) {
       try {
         final repository = ref.read(authRepositoryProvider);
@@ -23,23 +26,36 @@ class Auth extends _$Auth {
         return null;
       }
     }
-    
+
     return null;
   }
 
   Future<void> login(String email, String password) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final repository = ref.read(authRepositoryProvider);
-      final response = await repository.login(email, password);
-      
-      final secureStorage = ref.read(secureStorageProvider);
-      await secureStorage.saveTokens(
-        accessToken: response.accessToken,
-        refreshToken: response.refreshToken,
-      );
-      
-      return response.user;
+      try {
+        final repository = ref.read(authRepositoryProvider);
+        final response = await repository.login(email, password);
+
+        final secureStorage = ref.read(secureStorageProvider);
+        await secureStorage.saveTokens(
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken,
+        );
+
+        return response.user;
+      } catch (e, stackTrace) {
+        debugPrint('AUTH PROVIDER CRASH: $e');
+        debugPrint(stackTrace.toString());
+        if (e is DioException) {
+          if (e.response?.data != null) {
+            throw Exception(ErrorUtils.extractErrorMessage(e.response!.data));
+          }
+          throw Exception(e.message ?? 'Login failed');
+        }
+        // If it's a TypeError or FormatException (from JSON parsing)
+        throw Exception(e.toString());
+      }
     });
   }
 
@@ -51,21 +67,31 @@ class Auth extends _$Auth {
   }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final repository = ref.read(authRepositoryProvider);
-      final response = await repository.register(
-        email: email,
-        password: password,
-        displayName: displayName,
-        phoneNumber: phoneNumber,
-      );
-      
-      final secureStorage = ref.read(secureStorageProvider);
-      await secureStorage.saveTokens(
-        accessToken: response.accessToken,
-        refreshToken: response.refreshToken,
-      );
-      
-      return response.user;
+      try {
+        final repository = ref.read(authRepositoryProvider);
+        final response = await repository.register(
+          email: email,
+          password: password,
+          displayName: displayName,
+          phoneNumber: phoneNumber,
+        );
+
+        final secureStorage = ref.read(secureStorageProvider);
+        await secureStorage.saveTokens(
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken,
+        );
+
+        return response.user;
+      } catch (e) {
+        if (e is DioException) {
+          if (e.response?.data != null) {
+            throw Exception(ErrorUtils.extractErrorMessage(e.response!.data));
+          }
+          throw Exception(e.message ?? 'Registration failed');
+        }
+        throw Exception(e.toString());
+      }
     });
   }
 

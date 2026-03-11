@@ -217,8 +217,8 @@ return $default(_that.user,_that.accessToken,_that.refreshToken);case _:
 }
 
 /// @nodoc
+@JsonSerializable()
 
-@JsonSerializable(fieldRename: FieldRename.snake)
 class _AuthResponse implements AuthResponse {
   const _AuthResponse({required this.user, required this.accessToken, required this.refreshToken});
   factory _AuthResponse.fromJson(Map<String, dynamic> json) => _$AuthResponseFromJson(json);

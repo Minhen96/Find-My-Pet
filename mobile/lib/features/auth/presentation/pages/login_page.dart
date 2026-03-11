@@ -36,19 +36,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(authProvider, (previous, next) {
-      next.whenOrNull(
-        error: (error, stackTrace) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Login failed: ${error.toString()}'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        },
-      );
-    });
-
     final authState = ref.watch(authProvider);
     final isLoading = authState.isLoading;
 
@@ -120,6 +107,45 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
 
                   const SizedBox(height: 32),
+
+                  // ── Inline Error Banner ──
+                  if (authState.hasError) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppColors.error.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: AppColors.error,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              authState.error.toString().replaceAll(
+                                'Exception: ',
+                                '',
+                              ),
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: AppColors.error,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
 
                   // ── Email Field ──
                   const AuthFieldLabel(text: 'Email Address'),

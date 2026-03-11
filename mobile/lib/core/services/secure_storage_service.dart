@@ -23,11 +23,21 @@ class SecureStorageService {
   }
 
   Future<String?> getAccessToken() async {
-    return await _storage.read(key: _accessTokenKey);
+    try {
+      return await _storage.read(key: _accessTokenKey);
+    } catch (e) {
+      await _storage.delete(key: _accessTokenKey);
+      return null;
+    }
   }
 
   Future<String?> getRefreshToken() async {
-    return await _storage.read(key: _refreshTokenKey);
+    try {
+      return await _storage.read(key: _refreshTokenKey);
+    } catch (e) {
+      await _storage.delete(key: _refreshTokenKey);
+      return null;
+    }
   }
 
   Future<void> clearTokens() async {

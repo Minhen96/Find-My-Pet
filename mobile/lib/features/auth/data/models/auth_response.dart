@@ -7,7 +7,6 @@ part 'auth_response.g.dart';
 
 @Freezed(toJson: true, fromJson: true)
 abstract class AuthResponse with _$AuthResponse {
-  @JsonSerializable(fieldRename: FieldRename.snake)
   const factory AuthResponse({
     required User user,
     required String accessToken,
