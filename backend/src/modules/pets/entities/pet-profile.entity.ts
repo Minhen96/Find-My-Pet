@@ -5,18 +5,17 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
     ManyToOne,
-    Index,
+    OneToMany,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
-import { PetType, PetStatus } from '../enums/pet.enum';
-import type { Point } from 'geojson';
+import { PetType } from '../enums/pet.enum';
 
-@Entity('pets')
-export class Pet {
+@Entity('pet_profiles')
+export class PetProfile {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ nullable: true })
+    @Column()
     name: string;
 
     @Column({
@@ -26,27 +25,17 @@ export class Pet {
     })
     type: PetType;
 
-    @Column({
-        type: 'enum',
-        enum: PetStatus,
-        default: PetStatus.LOST,
-    })
-    status: PetStatus;
-
     @Column('text')
     breed: string;
-
-    @Column('text')
-    color: string;
-
-    @Column('text', { nullable: true })
-    description: string;
 
     @Column({ nullable: true })
     age: number;
 
     @Column({ nullable: true })
     gender: string;
+
+    @Column('text')
+    color: string;
 
     @Column('text', { nullable: true })
     markings: string;
@@ -60,23 +49,8 @@ export class Pet {
     @Column('simple-array', { nullable: true })
     images: string[];
 
-    @Index({ spatial: true })
-    @Column({
-        type: 'geography',
-        spatialFeatureType: 'Point',
-        srid: 4326,
-        nullable: true,
-    })
-    location: any;
-
-    @Column({ type: 'timestamp', nullable: true })
-    lastSeenAt: Date;
-
-    @Column({ default: false })
-    isResolved: boolean;
-
-    @ManyToOne(() => User, (user: User) => user.id)
-    poster: User;
+    @ManyToOne(() => User)
+    owner: User;
 
     @CreateDateColumn()
     createdAt: Date;

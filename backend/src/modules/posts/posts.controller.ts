@@ -7,52 +7,57 @@ import {
     UseInterceptors,
     UploadedFiles,
     ParseUUIDPipe,
+    Query,
     Patch,
     Delete,
     UseGuards,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { PetsService } from './pets.service';
-import { CreatePetProfileDto } from './dto/create-pet-profile.dto';
-import { UpdatePetProfileDto } from './dto/update-pet-profile.dto';
+import { Throttle } from '@nestjs/throttler';
+import { PostsService } from './posts.service';
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
+import { FindPostsDto } from './dto/find-posts.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @UseGuards(JwtAuthGuard)
-@Controller('pets')
-export class PetsController {
-    constructor(private readonly petsService: PetsService) { }
+@Controller('posts')
+export class PostsController {
+    constructor(private readonly postsService: PostsService) { }
 
     @Post()
+    @Throttle({ upload: { limit: 10, ttl: 3600000 } })
     @UseInterceptors(FilesInterceptor('images', 5))
     async create(
-        @Body() createDto: CreatePetProfileDto,
+        @Body() createPostDto: CreatePostDto,
         @UploadedFiles() files: Express.Multer.File[],
         @CurrentUser() user: User,
     ) {
-        return this.petsService.create(createDto, files, user);
+        return this.postsService.create(createPostDto, files, user);
     }
 
     @Get()
-    async findAll(@CurrentUser() user: User) {
-        return this.petsService.findAll(user);
+    async findAll(@Query() findPostsDto: FindPostsDto) {
+        return this.postsService.findAll(findPostsDto);
     }
 
     @Get(':id')
     async findOne(@Param('id', ParseUUIDPipe) id: string) {
-        return this.petsService.findOne(id);
+        return this.postsService.findOne(id);
     }
 
     @Patch(':id')
+    @Throttle({ upload: { limit: 10, ttl: 3600000 } })
     @UseInterceptors(FilesInterceptor('images', 5))
     async update(
         @Param('id', ParseUUIDPipe) id: string,
-        @Body() updateDto: UpdatePetProfileDto,
+        @Body() updatePostDto: UpdatePostDto,
         @UploadedFiles() files: Express.Multer.File[],
         @CurrentUser() user: User,
     ) {
-        return this.petsService.update(id, user.id, updateDto, files);
+        return this.postsService.update(id, user.id, updatePostDto, files);
     }
 
     @Delete(':id')
@@ -60,7 +65,7 @@ export class PetsController {
         @Param('id', ParseUUIDPipe) id: string,
         @CurrentUser() user: User,
     ) {
-        await this.petsService.remove(id, user.id);
-        return { message: 'Pet profile deleted successfully' };
+        await this.postsService.remove(id, user.id);
+        return { message: 'Post deleted successfully' };
     }
 }

@@ -37,25 +37,24 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         this.logger.log(`Client disconnected: ${client.id}`);
     }
 
-    // Subscribe to the JOIN_PET event
-    @SubscribeMessage(WS_EVENTS.JOIN_PET)
-    handleJoinPet(client: Socket, petId: string) {
-        // Join a private room for each pet
-        // Prevents from waking up for thousands of unrelated likes.
-        client.join(`pet_${petId}`);
-        this.logger.log(`Client ${client.id} joined room pet_${petId}`);
+    // Subscribe to the JOIN_POST event
+    @SubscribeMessage(WS_EVENTS.JOIN_POST)
+    handleJoinPost(client: Socket, postId: string) {
+        // Join a private room for each post
+        client.join(`post_${postId}`);
+        this.logger.log(`Client ${client.id} joined room post_${postId}`);
     }
 
-    // Subscribe to the LEAVE_PET event
-    @SubscribeMessage(WS_EVENTS.LEAVE_PET)
-    handleLeavePet(client: Socket, petId: string) {
-        // Leave the private room for the pet
-        client.leave(`pet_${petId}`);
-        this.logger.log(`Client ${client.id} left room pet_${petId}`);
+    // Subscribe to the LEAVE_POST event
+    @SubscribeMessage(WS_EVENTS.LEAVE_POST)
+    handleLeavePost(client: Socket, postId: string) {
+        // Leave the private room for the post
+        client.leave(`post_${postId}`);
+        this.logger.log(`Client ${client.id} left room post_${postId}`);
     }
 
-    // Broadcast to all clients in the pet's room
-    broadcastToPet(petId: string, event: string, data: any) {
-        this.server.to(`pet_${petId}`).emit(event, data);
+    // Broadcast to all clients in the post's room
+    broadcastToPost(postId: string, event: string, data: any) {
+        this.server.to(`post_${postId}`).emit(event, data);
     }
 }

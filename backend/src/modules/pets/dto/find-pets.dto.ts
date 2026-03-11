@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsNumber, Min, Max } from 'class-validator';
+import { IsEnum, IsOptional, IsNumber, Min, Max, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PetType, PetStatus } from '../enums/pet.enum';
 
@@ -40,4 +40,8 @@ export class FindPetsDto {
 
     @IsOptional()
     cursor?: string; // Cursor for infinite scrolling (timestamp of the last item)
+
+    @IsOptional()
+    @IsString()
+    userId?: string;
 }

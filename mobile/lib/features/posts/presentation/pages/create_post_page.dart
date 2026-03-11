@@ -7,10 +7,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../providers/pets_provider.dart';
+import '../providers/posts_provider.dart';
+import 'package:mobile/features/profile/presentation/providers/my_pet_profiles_provider.dart';
 import 'package:mobile/features/auth/presentation/widgets/auth_field_label.dart';
 import 'package:mobile/features/auth/presentation/widgets/auth_text_field.dart';
-import 'package:mobile/features/posts/data/models/pet.dart';
+import 'package:mobile/features/posts/data/models/post.dart';
+import 'package:mobile/features/profile/data/models/pet_profile.dart';
 
 class CreatePostPage extends ConsumerStatefulWidget {
   const CreatePostPage({super.key});
@@ -21,13 +23,13 @@ class CreatePostPage extends ConsumerStatefulWidget {
 
 class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _breedController = TextEditingController();
   final _colorController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  PetType _selectedType = PetType.dog;
-  PetStatus _selectedStatus = PetStatus.lost;
+  PostType _selectedType = PostType.lost;
+  AnimalType _selectedAnimalType = AnimalType.dog;
+  PetProfile? _selectedPetProfile;
   LatLng? _pickedLocation;
   final List<XFile> _selectedImages = [];
   final ImagePicker _picker = ImagePicker();
@@ -35,7 +37,6 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
 
   @override
   void dispose() {
-    _nameController.dispose();
     _breedController.dispose();
     _colorController.dispose();
     _descriptionController.dispose();
@@ -63,18 +64,18 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
     setState(() => _isSubmitting = true);
 
     try {
-      final petData = {
-        'name': _nameController.text.trim(),
+      final postData = {
         'type': _selectedType.name.toUpperCase(),
-        'status': _selectedStatus.name.toUpperCase(),
-        'breed': _breedController.text.trim(),
-        'color': _colorController.text.trim(),
+        'animalType': _selectedAnimalType.name.toUpperCase(),
+        'petProfileId': _selectedPetProfile?.id,
+        'breed': _breedController.text.trim().isEmpty ? null : _breedController.text.trim(),
+        'color': _colorController.text.trim().isEmpty ? null : _colorController.text.trim(),
         'description': _descriptionController.text.trim(),
         'latitude': _pickedLocation!.latitude,
         'longitude': _pickedLocation!.longitude,
       };
 
-      await ref.read(petsProvider.notifier).createPet(petData, _selectedImages);
+      await ref.read(postsProvider.notifier).createPost(postData, _selectedImages);
 
       if (mounted) {
         context.pop();
@@ -95,11 +96,13 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
 
   @override
   Widget build(BuildContext context) {
+    final myProfilesState = ref.watch(myPetProfilesProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          'Post a Pet',
+          'Post an Update',
           style: GoogleFonts.inter(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
@@ -114,13 +117,58 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const AuthFieldLabel(text: 'Pet Name'),
+                const AuthFieldLabel(text: 'Post Type'),
                 const SizedBox(height: 8),
-                AuthTextField(
-                  controller: _nameController,
-                  hint: 'Buddy',
-                  icon: Icons.pets,
-                  enabled: !_isSubmitting,
+                DropdownButtonFormField<PostType>(
+                  initialValue: _selectedType,
+                  decoration: _dropdownDecoration(),
+                  items: PostType.values.where((t) => t != PostType.moment).map((type) {
+                    return DropdownMenuItem(
+                      value: type,
+                      child: Text(type.name.toUpperCase()),
+                    );
+                  }).toList(),
+                  onChanged: _isSubmitting
+                      ? null
+                      : (v) => setState(() => _selectedType = v!),
+                ),
+
+                const SizedBox(height: 20),
+
+                const AuthFieldLabel(text: 'Link to My Pet (Optional)'),
+                const SizedBox(height: 8),
+                myProfilesState.when(
+                  data: (profiles) => DropdownButtonFormField<PetProfile?>(
+                    initialValue: _selectedPetProfile,
+                    decoration: _dropdownDecoration().copyWith(
+                      hintText: 'Select a pet profile',
+                    ),
+                    items: [
+                      const DropdownMenuItem<PetProfile?>(
+                        value: null,
+                        child: Text('Not linked to my pet'),
+                      ),
+                      ...profiles.map((p) => DropdownMenuItem(
+                            value: p,
+                            child: Text(p.name),
+                          )),
+                    ],
+                    onChanged: _isSubmitting
+                        ? null
+                        : (v) {
+                            setState(() {
+                              _selectedPetProfile = v;
+                              if (v != null) {
+                                _breedController.text = v.breed;
+                                _colorController.text = v.color;
+                                // Automatically sync animal type if available
+                                // _selectedAnimalType = ... (v.type if we had it in PetProfile)
+                              }
+                            });
+                          },
+                  ),
+                  loading: () => const LinearProgressIndicator(),
+                  error: (e, __) => Text('Error loading profiles: $e'),
                 ),
 
                 const SizedBox(height: 20),
@@ -131,12 +179,12 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const AuthFieldLabel(text: 'Type'),
+                          const AuthFieldLabel(text: 'Animal Type'),
                           const SizedBox(height: 8),
-                          DropdownButtonFormField<PetType>(
-                            initialValue: _selectedType,
+                          DropdownButtonFormField<AnimalType>(
+                            initialValue: _selectedAnimalType,
                             decoration: _dropdownDecoration(),
-                            items: PetType.values.map((type) {
+                            items: AnimalType.values.map((type) {
                               return DropdownMenuItem(
                                 value: type,
                                 child: Text(type.name.toUpperCase()),
@@ -144,30 +192,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                             }).toList(),
                             onChanged: _isSubmitting
                                 ? null
-                                : (v) => setState(() => _selectedType = v!),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const AuthFieldLabel(text: 'Status'),
-                          const SizedBox(height: 8),
-                          DropdownButtonFormField<PetStatus>(
-                            initialValue: _selectedStatus,
-                            decoration: _dropdownDecoration(),
-                            items: PetStatus.values.map((status) {
-                              return DropdownMenuItem(
-                                value: status,
-                                child: Text(status.name.toUpperCase()),
-                              );
-                            }).toList(),
-                            onChanged: _isSubmitting
-                                ? null
-                                : (v) => setState(() => _selectedStatus = v!),
+                                : (v) => setState(() => _selectedAnimalType = v!),
                           ),
                         ],
                       ),

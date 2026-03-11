@@ -8,6 +8,7 @@ import {
     Min,
     Max,
     IsArray,
+    MaxLength,
 } from 'class-validator';
 import { PetType, PetStatus } from '../enums/pet.enum';
 import { Type } from 'class-transformer';
@@ -17,6 +18,11 @@ export class CreatePetDto {
     @IsString({ each: true })
     @IsOptional()
     imageUrls?: string[];
+
+    @IsString()
+    @IsOptional()
+    @MaxLength(100)
+    name?: string;
 
     @IsEnum(PetType)
     @IsNotEmpty()
@@ -53,4 +59,25 @@ export class CreatePetDto {
     @IsDateString()
     @IsOptional()
     lastSeenAt?: string;
+
+    @IsNumber()
+    @IsOptional()
+    @Type(() => Number)
+    age?: number;
+
+    @IsString()
+    @IsOptional()
+    gender?: string;
+
+    @IsString()
+    @IsOptional()
+    markings?: string;
+
+    @IsString()
+    @IsOptional()
+    healthNotes?: string;
+
+    @IsString()
+    @IsOptional()
+    microchipId?: string;
 }

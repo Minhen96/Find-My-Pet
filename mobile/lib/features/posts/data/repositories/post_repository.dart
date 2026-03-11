@@ -1,61 +1,58 @@
-import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/api/dio_client.dart';
-import '../models/pet.dart';
+import '../models/post.dart';
 
-part 'pet_repository.g.dart';
+part 'post_repository.g.dart';
 
-class PetRepository {
+class PostRepository {
   final Dio _dio;
 
-  PetRepository(this._dio);
+  PostRepository(this._dio);
 
-  Future<List<Pet>> getPets({
-    PetStatus? status,
-    PetType? type,
+  Future<List<Post>> getPosts({
+    PostType? type,
+    AnimalType? animalType,
     int limit = 20,
-    // --- Cursor Pagination ---
-    // Instead of `offset=20`, we pass `cursor="2026-03-11T10:00:00Z"`.
-    // The cursor is the `createdAt` timestamp of the last loaded pet.
-    // The backend uses this to fetch older pets quickly without shifting/duplicates.
     String? cursor,
+    String? userId,
+    String? petProfileId,
   }) async {
     final response = await _dio.get(
-      '/pets',
+      '/posts',
       queryParameters: {
-        if (status != null) 'status': status.name.toUpperCase(),
         if (type != null) 'type': type.name.toUpperCase(),
+        if (animalType != null) 'animalType': animalType.name.toUpperCase(),
         'limit': limit,
         if (cursor != null) 'cursor': cursor,
+        if (userId != null) 'userId': userId,
+        if (petProfileId != null) 'petProfileId': petProfileId,
       },
     );
 
     final List<dynamic> data = response.data as List<dynamic>;
     return data
-        .map((json) => Pet.fromJson(json as Map<String, dynamic>))
+        .map((json) => Post.fromJson(json as Map<String, dynamic>))
         .toList();
   }
 
-  Future<Pet> getPetById(String id) async {
-    final response = await _dio.get('/pets/$id');
-    return Pet.fromJson(response.data as Map<String, dynamic>);
+  Future<Post> getPostById(String id) async {
+    final response = await _dio.get('/posts/$id');
+    return Post.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<Pet> createPet(
-    Map<String, dynamic> petData,
+  Future<Post> createPost(
+    Map<String, dynamic> postData,
     List<XFile> images,
   ) async {
     final List<String> directImageUrls = [];
     final List<XFile> fallbackImages = [];
 
-    // 🚀 Layer 1 & 2: Try Direct Upload via Presigned URLs
     for (final image in images) {
       try {
-        // 1. Get Presigned URL from Backend
         final presignedResponse = await _dio.get(
           '/media/presigned-url',
           queryParameters: {
@@ -67,7 +64,6 @@ class PetRepository {
         final String uploadUrl = presignedResponse.data['uploadUrl'];
         final String fileUrl = presignedResponse.data['fileUrl'];
 
-        // 2. Upload directly to Cloudflare R2
         final fileBytes = await image.readAsBytes();
         final uploadResponse = await Dio().put(
           uploadUrl,
@@ -86,20 +82,17 @@ class PetRepository {
           fallbackImages.add(image);
         }
       } catch (e) {
-        // Direct upload failed, add to fallback list
         fallbackImages.add(image);
       }
     }
 
-    // 3. Create the Pet Post with whatever URLs we got
     final response = await _dio.post(
-      '/pets',
-      data: {...petData, 'imageUrls': directImageUrls},
+      '/posts',
+      data: {...postData, 'imageUrls': directImageUrls},
     );
 
-    final createdPet = Pet.fromJson(response.data as Map<String, dynamic>);
+    final createdPost = Post.fromJson(response.data as Map<String, dynamic>);
 
-    // 🧱 Layer 3: Secondary Catch-All (Backend Fallback Queue)
     if (fallbackImages.isNotEmpty) {
       for (final image in fallbackImages) {
         try {
@@ -108,17 +101,16 @@ class PetRepository {
               image.path,
               filename: image.name,
             ),
-            'petId': createdPet.id,
+            'postId': createdPost.id,
           });
           await _dio.post('/media/upload-fallback', data: formData);
         } catch (e) {
-          // If even fallback fails, we log it, but the post is already created
           debugPrint('Critical: Fallback upload failed for ${image.name}');
         }
       }
     }
 
-    return createdPet;
+    return createdPost;
   }
 
   String _getContentType(String fileName) {
@@ -134,9 +126,9 @@ class PetRepository {
     return 'application/octet-stream';
   }
 
-  Future<Pet> updatePet(
+  Future<Post> updatePost(
     String id,
-    Map<String, dynamic> petData,
+    Map<String, dynamic> postData,
     List<XFile> images,
   ) async {
     final List<String> directImageUrls = [];
@@ -174,11 +166,11 @@ class PetRepository {
     }
 
     final response = await _dio.patch(
-      '/pets/$id',
-      data: {...petData, 'imageUrls': directImageUrls},
+      '/posts/$id',
+      data: {...postData, 'imageUrls': directImageUrls},
     );
 
-    final updatedPet = Pet.fromJson(response.data as Map<String, dynamic>);
+    final updatedPost = Post.fromJson(response.data as Map<String, dynamic>);
 
     if (fallbackImages.isNotEmpty) {
       for (final image in fallbackImages) {
@@ -188,25 +180,25 @@ class PetRepository {
               image.path,
               filename: image.name,
             ),
-            'petId': updatedPet.id,
+            'postId': updatedPost.id,
           });
           await _dio.post('/media/upload-fallback', data: formData);
         } catch (_) {
-          // Fallback upload failed silently — post is already created
+          // Ignore
         }
       }
     }
 
-    return updatedPet;
+    return updatedPost;
   }
 
-  Future<void> deletePet(String id) async {
-    await _dio.delete('/pets/$id');
+  Future<void> deletePost(String id) async {
+    await _dio.delete('/posts/$id');
   }
 }
 
 @riverpod
-PetRepository petRepository(Ref ref) {
+PostRepository postRepository(Ref ref) {
   final dio = ref.watch(dioClientProvider);
-  return PetRepository(dio);
+  return PostRepository(dio);
 }

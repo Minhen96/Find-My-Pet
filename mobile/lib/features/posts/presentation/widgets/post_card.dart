@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mobile/features/posts/data/models/pet.dart';
+import 'package:mobile/features/posts/data/models/post.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/interactions_provider.dart';
 
 class PostCard extends ConsumerWidget {
-  final Pet pet;
+  final Post post;
 
-  const PostCard({super.key, required this.pet});
+  const PostCard({super.key, required this.post});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final interactionsAsync = ref.watch(interactionsProvider(pet.id));
+    final interactionsAsync = ref.watch(interactionsProvider(post.id));
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: const BoxDecoration(
@@ -34,12 +34,12 @@ class PostCard extends ConsumerWidget {
                 CircleAvatar(
                   radius: 20,
                   backgroundColor: AppColors.primary.withValues(alpha: 0.3),
-                  backgroundImage: pet.poster?.email != null
+                  backgroundImage: post.poster?.email != null
                       ? NetworkImage(
-                          'https://ui-avatars.com/api/?name=${pet.poster!.displayName}&background=B3DFDC&color=0F172A',
+                          'https://ui-avatars.com/api/?name=${post.poster!.displayName}&background=B3DFDC&color=0F172A',
                         )
                       : null,
-                  child: pet.poster?.email == null
+                  child: post.poster?.email == null
                       ? const Icon(Icons.person, color: AppColors.primaryDark)
                       : null,
                 ),
@@ -49,7 +49,7 @@ class PostCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        pet.poster?.displayName ?? 'Anonymous',
+                        post.poster?.displayName ?? 'Anonymous',
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -57,7 +57,7 @@ class PostCard extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        '${pet.createdAt.day}/${pet.createdAt.month}/${pet.createdAt.year} • ${pet.breed}',
+                        '${post.createdAt.day}/${post.createdAt.month}/${post.createdAt.year} • ${post.petProfile?.name ?? post.breed ?? post.animalType?.name.toUpperCase() ?? "Unknown"}',
                         style: GoogleFonts.inter(
                           fontSize: 10,
                           color: AppColors.textHint,
@@ -78,12 +78,12 @@ class PostCard extends ConsumerWidget {
           // Image Carousel (Placeholder if empty)
           AspectRatio(
             aspectRatio: 1,
-            child: pet.images.isNotEmpty
+            child: post.images.isNotEmpty
                 ? PageView.builder(
-                    itemCount: pet.images.length,
+                    itemCount: post.images.length,
                     itemBuilder: (context, index) {
                       return Image.network(
-                        pet.images[index],
+                        post.images[index],
                         fit: BoxFit.cover,
                       );
                     },
@@ -113,37 +113,39 @@ class PostCard extends ConsumerWidget {
                       ),
                       decoration: BoxDecoration(
                         color: _getStatusColor(
-                          pet.status,
+                          post.type,
                         ).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        pet.status.name.toUpperCase(),
+                        post.type.name.toUpperCase(),
                         style: GoogleFonts.inter(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: _getStatusColor(
-                            pet.status,
-                          ).withValues(alpha: 0.1),
+                            post.type,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '${pet.type.name.toUpperCase()} - ${pet.color}',
+                        post.petProfile?.name ?? post.animalType?.name.toUpperCase() ?? 'UNNAMED',
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  pet.description ?? 'No description provided.',
+                  post.description ?? 'No description provided.',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     color: AppColors.textSecondary,
@@ -166,7 +168,7 @@ class PostCard extends ConsumerWidget {
                               icon: Icons
                                   .favorite_border, // TODO: Add liked status
                               onPressed: () => ref
-                                  .read(interactionsProvider(pet.id).notifier)
+                                  .read(interactionsProvider(post.id).notifier)
                                   .toggleLike(),
                             ),
                             Text(
@@ -189,7 +191,7 @@ class PostCard extends ConsumerWidget {
                     _ActionButton(
                       icon: Icons.chat_bubble_outline,
                       onPressed: () =>
-                          context.push('/post-details', extra: pet),
+                          context.push('/post-details', extra: post),
                     ),
                     _ActionButton(
                       icon: Icons.share_outlined,
@@ -197,7 +199,7 @@ class PostCard extends ConsumerWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
-                              'Social sharing coming soon in Phase 2!',
+                              'Social sharing coming soon!',
                             ),
                           ),
                         );
@@ -206,7 +208,7 @@ class PostCard extends ConsumerWidget {
                     const Spacer(),
                     ElevatedButton(
                       onPressed: () =>
-                          context.push('/post-details', extra: pet),
+                          context.push('/post-details', extra: post),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary.withValues(
                           alpha: 0.15,
@@ -238,17 +240,18 @@ class PostCard extends ConsumerWidget {
     );
   }
 
-  Color _getStatusColor(PetStatus status) {
-    switch (status) {
-      case PetStatus.lost:
+  Color _getStatusColor(PostType type) {
+    switch (type) {
+      case PostType.lost:
         return Colors.redAccent;
-      case PetStatus.found:
+      case PostType.found:
         return Colors.green;
-      case PetStatus.stray:
+      case PostType.sighted:
+      case PostType.stray:
         return Colors.orange;
-      case PetStatus.rescued:
+      case PostType.rescued:
         return AppColors.primaryDark;
-      case PetStatus.moment:
+      case PostType.moment:
         return AppColors.primary;
     }
   }

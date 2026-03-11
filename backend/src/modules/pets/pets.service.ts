@@ -1,217 +1,101 @@
-import { Injectable, NotFoundException, Inject, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Pet } from './entities/pet.entity';
-import { CreatePetDto } from './dto/create-pet.dto';
-import { UpdatePetDto } from './dto/update-pet.dto';
-import { FindPetsDto } from './dto/find-pets.dto';
+import { PetProfile } from './entities/pet-profile.entity';
+import { CreatePetProfileDto } from './dto/create-pet-profile.dto';
+import { UpdatePetProfileDto } from './dto/update-pet-profile.dto';
 import { StorageService } from '../storage/storage.service';
 import { User } from '../users/entities/user.entity';
-import Redis from 'ioredis';
-import * as crypto from 'crypto';
-import { REDIS_KEYS } from '../../common/constants/app.constants';
-import { CircuitBreaker } from '../../common/utils/circuit-breaker';
 
 @Injectable()
 export class PetsService {
-    private readonly redisBreaker: CircuitBreaker;
-
     constructor(
-        @InjectRepository(Pet)
-        private readonly petsRepository: Repository<Pet>,
+        @InjectRepository(PetProfile)
+        private readonly petProfileRepository: Repository<PetProfile>,
         private readonly storageService: StorageService,
-        @Inject('REDIS_CLIENT')
-        private readonly redis: Redis,
-    ) {
-        this.redisBreaker = new CircuitBreaker('Redis', 5, 30000);
-    }
+    ) { }
 
-    async createCommunityPost(
-        createPetDto: CreatePetDto,
+    async create(
+        createDto: CreatePetProfileDto,
         files: Express.Multer.File[],
         user: User,
-    ): Promise<Pet> {
-        const imageUrls: string[] = createPetDto.imageUrls || [];
+    ): Promise<PetProfile> {
+        const imageUrls: string[] = createDto.imageUrls || [];
 
         if (files && files.length > 0) {
             for (const file of files) {
-                const url = await this.storageService.uploadFile(file, 'pets');
+                const url = await this.storageService.uploadFile(file, 'pet-profiles');
                 if (url) {
                     imageUrls.push(url);
                 }
             }
         }
 
-        const location = {
-            type: 'Point',
-            coordinates: [createPetDto.longitude, createPetDto.latitude],
-        };
-
-        const pet = await this.petsRepository.save(this.petsRepository.create({
-            ...createPetDto,
+        const petProfile = this.petProfileRepository.create({
+            ...createDto,
             images: imageUrls,
-            location,
-            poster: user,
-        }));
-
-        // Invalidate all feed caches on new pet creation
-        // Since latest post should immediately appear in the feed (but not delay until cache expires)
-        await this.redisBreaker.execute(
-            async () => {
-                const keys = await this.redis.keys(`${REDIS_KEYS.FEED_CACHE_PREFIX}*`);
-                if (keys.length > 0) {
-                    await this.redis.del(...keys);
-                }
-            },
-            null,
-        );
-
-        return pet;
-    }
-
-    async findAll(query?: FindPetsDto): Promise<Pet[]> {
-        // 1. Create a unique cache key based on the query parameters
-        const queryHash = crypto
-            .createHash('md5')
-            .update(JSON.stringify(query || {}))
-            .digest('hex');
-        const cacheKey = `${REDIS_KEYS.FEED_CACHE_PREFIX}${queryHash}`;
-
-        // 2. Check Redis Cache
-        // If Redis is down, fail open - proceed to database
-        const cachedData = await this.redisBreaker.execute(
-            () => this.redis.get(cacheKey),
-            null,
-        );
-
-        if (cachedData) {
-            return JSON.parse(cachedData);
-        }
-
-        // 3. Cache Miss: Fetch from Database
-        const queryBuilder = this.petsRepository.createQueryBuilder('pet')
-            .leftJoinAndSelect('pet.poster', 'poster')
-            .orderBy('pet.createdAt', 'DESC');
-
-        if (query) {
-            if (query.type) {
-                queryBuilder.andWhere('pet.type = :type', { type: query.type });
-            }
-
-            if (query.status) {
-                queryBuilder.andWhere('pet.status = :status', { status: query.status });
-            }
-
-            if (query.latitude && query.longitude && query.radius) {
-                queryBuilder.andWhere(
-                    'ST_DWithin(pet.location, ST_MakePoint(:longitude, :latitude)::geography, :radius)',
-                    {
-                        longitude: query.longitude,
-                        latitude: query.latitude,
-                        radius: query.radius,
-                    },
-                );
-            }
-
-            if (query.cursor) {
-                // --- Cursor Pagination Logic ---
-                // 1. A cursor here is the `createdAt` timestamp of the LAST item the frontend received.
-                // 2. We query for pets created BEFORE that timestamp (createdAt < :cursor).
-                // 3. Because we 'ORDER BY pet.createdAt DESC', we naturally get the next oldest chunk.
-                // 4. This avoids DB "offset scanning" overhead and prevents new posts from shifting the feed!
-                const cursorDate = new Date(query.cursor);
-                queryBuilder.andWhere('pet.createdAt < :cursor', { cursor: cursorDate });
-            }
-        }
-
-        queryBuilder.take(query?.limit || 20);
-
-        const pets = await queryBuilder.getMany();
-
-        // 4. Save to Redis Cache (TTL: 5 minutes = 300 seconds)
-        await this.redisBreaker.execute(
-            () => this.redis.set(cacheKey, JSON.stringify(pets), 'EX', 300),
-            null,
-        );
-
-        return pets;
-    }
-
-    async findOne(id: string): Promise<Pet> {
-        const pet = await this.petsRepository.findOne({
-            where: { id },
-            relations: ['poster'],
+            owner: user,
         });
 
-        if (!pet) {
-            throw new NotFoundException(`Pet with ID ${id} not found`);
+        return this.petProfileRepository.save(petProfile);
+    }
+
+    async findAll(user: User): Promise<PetProfile[]> {
+        return this.petProfileRepository.find({
+            where: { owner: { id: user.id } },
+            order: { createdAt: 'DESC' },
+        });
+    }
+
+    async findOne(id: string): Promise<PetProfile> {
+        const profile = await this.petProfileRepository.findOne({
+            where: { id },
+            relations: ['owner'],
+        });
+
+        if (!profile) {
+            throw new NotFoundException(`Pet profile with ID ${id} not found`);
         }
 
-        return pet;
+        return profile;
     }
 
     async update(
         id: string,
         userId: string,
-        updatePetDto: UpdatePetDto,
+        updateDto: UpdatePetProfileDto,
         files?: Express.Multer.File[],
-    ): Promise<Pet> {
-        const pet = await this.findOne(id);
+    ): Promise<PetProfile> {
+        const profile = await this.findOne(id);
 
-        if (pet.poster.id !== userId) {
-            throw new ForbiddenException('You do not have permission to update this post');
+        if (profile.owner.id !== userId) {
+            throw new ForbiddenException('You do not have permission to update this profile');
         }
 
         const imageUrls = [
-            ...(updatePetDto.imageUrls || pet.images || []),
+            ...(updateDto.imageUrls || profile.images || []),
         ];
 
         if (files && files.length > 0) {
             for (const file of files) {
-                const url = await this.storageService.uploadFile(file, 'pets');
+                const url = await this.storageService.uploadFile(file, 'pet-profiles');
                 if (url) {
                     imageUrls.push(url);
                 }
             }
         }
 
-        const updateData: any = { ...updatePetDto };
-        if (updatePetDto.latitude && updatePetDto.longitude) {
-            updateData.location = {
-                type: 'Point',
-                coordinates: [updatePetDto.longitude, updatePetDto.latitude],
-            };
-            delete updateData.latitude;
-            delete updateData.longitude;
-        }
-
-        Object.assign(pet, { ...updateData, images: imageUrls });
-        const updatedPet = await this.petsRepository.save(pet);
-
-        await this.invalidateCache();
-        return updatedPet;
+        Object.assign(profile, { ...updateDto, images: imageUrls });
+        return this.petProfileRepository.save(profile);
     }
 
     async remove(id: string, userId: string): Promise<void> {
-        const pet = await this.findOne(id);
+        const profile = await this.findOne(id);
 
-        if (pet.poster.id !== userId) {
-            throw new ForbiddenException('You do not have permission to delete this post');
+        if (profile.owner.id !== userId) {
+            throw new ForbiddenException('You do not have permission to delete this profile');
         }
 
-        await this.petsRepository.remove(pet);
-        await this.invalidateCache();
-    }
-
-    private async invalidateCache() {
-        await this.redisBreaker.execute(
-            async () => {
-                const keys = await this.redis.keys(`${REDIS_KEYS.FEED_CACHE_PREFIX}*`);
-                if (keys.length > 0) {
-                    await this.redis.del(...keys);
-                }
-            },
-            null,
-        );
+        await this.petProfileRepository.remove(profile);
     }
 }

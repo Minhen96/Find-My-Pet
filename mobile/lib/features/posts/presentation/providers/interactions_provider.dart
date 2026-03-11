@@ -8,7 +8,7 @@ part 'interactions_provider.g.dart';
 @riverpod
 class Interactions extends _$Interactions {
   @override
-  FutureOr<Map<String, dynamic>> build(String petId) async {
+  FutureOr<Map<String, dynamic>> build(String postId) async {
     final socket = ref.watch(socketProvider);
 
     // Listen for real-time updates
@@ -31,25 +31,25 @@ class Interactions extends _$Interactions {
       });
     });
 
-    return _fetchInteractions(petId);
+    return _fetchInteractions(postId);
   }
 
-  Future<Map<String, dynamic>> _fetchInteractions(String petId) async {
+  Future<Map<String, dynamic>> _fetchInteractions(String postId) async {
     final dio = ref.read(dioClientProvider);
-    final response = await dio.get('/pets/$petId/interactions');
+    final response = await dio.get('/posts/$postId/interactions');
     return response.data as Map<String, dynamic>;
   }
 
   Future<void> toggleLike() async {
     final dio = ref.read(dioClientProvider);
-    await dio.post('/pets/$petId/interactions/like');
+    await dio.post('/posts/$postId/interactions/like');
     ref.invalidateSelf();
   }
 
   Future<void> addComment(String content) async {
     final dio = ref.read(dioClientProvider);
     await dio.post(
-      '/pets/$petId/interactions/comment',
+      '/posts/$postId/interactions/comment',
       data: {'content': content},
     );
     ref.invalidateSelf();

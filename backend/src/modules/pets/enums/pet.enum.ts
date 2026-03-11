@@ -10,5 +10,7 @@ export enum PetStatus {
     LOST = 'LOST',
     FOUND = 'FOUND',
     SIGHTED = 'SIGHTED',
+    STRAY = 'STRAY',
+    RESCUED = 'RESCUED',
     MOMENT = 'MOMENT',
 }

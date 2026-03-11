@@ -8,54 +8,23 @@ import {
     Index,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
-import { PetType, PetStatus } from '../enums/pet.enum';
-import type { Point } from 'geojson';
+import { PetProfile } from '../../pets/entities/pet-profile.entity';
+import { PetType, PetStatus } from '../../pets/enums/pet.enum';
 
-@Entity('pets')
-export class Pet {
+@Entity('posts')
+export class Post {
     @PrimaryGeneratedColumn('uuid')
     id: string;
-
-    @Column({ nullable: true })
-    name: string;
-
-    @Column({
-        type: 'enum',
-        enum: PetType,
-        default: PetType.OTHER,
-    })
-    type: PetType;
 
     @Column({
         type: 'enum',
         enum: PetStatus,
         default: PetStatus.LOST,
     })
-    status: PetStatus;
-
-    @Column('text')
-    breed: string;
-
-    @Column('text')
-    color: string;
+    type: PetStatus; // Renaming 'status' to 'type' in conceptually, but keeping the enum for now
 
     @Column('text', { nullable: true })
     description: string;
-
-    @Column({ nullable: true })
-    age: number;
-
-    @Column({ nullable: true })
-    gender: string;
-
-    @Column('text', { nullable: true })
-    markings: string;
-
-    @Column('text', { nullable: true })
-    healthNotes: string;
-
-    @Column({ nullable: true })
-    microchipId: string;
 
     @Column('simple-array', { nullable: true })
     images: string[];
@@ -75,8 +44,25 @@ export class Pet {
     @Column({ default: false })
     isResolved: boolean;
 
-    @ManyToOne(() => User, (user: User) => user.id)
+    @ManyToOne(() => User)
     poster: User;
+
+    @ManyToOne(() => PetProfile, { nullable: true })
+    petProfile: PetProfile;
+
+    // Optional: for ad-hoc posts without a profile
+    @Column({
+        type: 'enum',
+        enum: PetType,
+        nullable: true,
+    })
+    animalType: PetType;
+
+    @Column({ nullable: true })
+    breed: string;
+
+    @Column({ nullable: true })
+    color: string;
 
     @CreateDateColumn()
     createdAt: Date;

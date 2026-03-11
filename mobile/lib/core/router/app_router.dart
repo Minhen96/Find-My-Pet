@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile/features/posts/data/models/pet.dart';
+import 'package:mobile/features/posts/data/models/post.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -55,8 +55,8 @@ GoRouter appRouter(Ref ref) {
       GoRoute(
         path: '/post-details',
         builder: (context, state) {
-          final pet = state.extra as Pet;
-          return PostDetailsPage(pet: pet);
+          final post = state.extra as Post;
+          return PostDetailsPage(post: post);
         },
       ),
       StatefulShellRoute.indexedStack(

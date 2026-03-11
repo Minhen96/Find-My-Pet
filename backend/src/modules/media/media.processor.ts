@@ -5,7 +5,7 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Pet } from '../pets/entities/pet.entity';
+import { Post } from '../posts/entities/post.entity';
 
 @Processor('media-uploads')
 export class MediaProcessor extends WorkerHost {
@@ -15,8 +15,8 @@ export class MediaProcessor extends WorkerHost {
 
     constructor(
         private configService: ConfigService,
-        @InjectRepository(Pet)
-        private petRepository: Repository<Pet>,
+        @InjectRepository(Post)
+        private postRepository: Repository<Post>,
     ) {
         super();
         const accountId = this.configService.get<string>('R2_ACCOUNT_ID')!;
@@ -35,7 +35,7 @@ export class MediaProcessor extends WorkerHost {
     }
 
     async process(job: Job<any, any, string>): Promise<any> {
-        const { fileBuffer, fileName, contentType, petId } = job.data;
+        const { fileBuffer, fileName, contentType, postId } = job.data;
 
         this.logger.log(`Processing fallback upload for: ${fileName}`);
 
@@ -55,14 +55,14 @@ export class MediaProcessor extends WorkerHost {
             const fileUrl = `${this.configService.get('R2_PUBLIC_URL')}/${key}`;
             this.logger.log(`Successfully uploaded fallback image: ${fileUrl}`);
 
-            // 2. If it was linked to a pet, update the pet post
-            if (petId) {
-                const pet = await this.petRepository.findOne({ where: { id: petId } });
-                if (pet) {
-                    const currentImages = pet.images || [];
-                    pet.images = [...currentImages, fileUrl];
-                    await this.petRepository.save(pet);
-                    this.logger.log(`Linked fallback image to pet: ${petId}`);
+            // 2. If it was linked to a post, update the post
+            if (postId) {
+                const post = await this.postRepository.findOne({ where: { id: postId } });
+                if (post) {
+                    const currentImages = post.images || [];
+                    post.images = [...currentImages, fileUrl];
+                    await this.postRepository.save(post);
+                    this.logger.log(`Linked fallback image to post: ${postId}`);
                 }
             }
 

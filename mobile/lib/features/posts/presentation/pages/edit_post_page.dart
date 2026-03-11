@@ -7,27 +7,26 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mobile/features/auth/presentation/widgets/auth_field_label.dart';
 import 'package:mobile/features/auth/presentation/widgets/auth_text_field.dart';
-import 'package:mobile/features/posts/data/models/pet.dart';
+import 'package:mobile/features/posts/data/models/post.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../providers/pets_provider.dart';
+import '../providers/posts_provider.dart';
 
-class EditPetPage extends ConsumerStatefulWidget {
-  final Pet pet;
-  const EditPetPage({super.key, required this.pet});
+class EditPostPage extends ConsumerStatefulWidget {
+  final Post post;
+  const EditPostPage({super.key, required this.post});
 
   @override
-  ConsumerState<EditPetPage> createState() => _EditPetPageState();
+  ConsumerState<EditPostPage> createState() => _EditPostPageState();
 }
 
-class _EditPetPageState extends ConsumerState<EditPetPage> {
+class _EditPostPageState extends ConsumerState<EditPostPage> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
   late TextEditingController _breedController;
   late TextEditingController _colorController;
   late TextEditingController _descriptionController;
 
-  late PetType _selectedType;
-  late PetStatus _selectedStatus;
+  late PostType _selectedType;
+  AnimalType? _selectedAnimalType;
   LatLng? _pickedLocation;
   final List<XFile> _selectedImages = [];
   final ImagePicker _picker = ImagePicker();
@@ -36,23 +35,23 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.pet.name);
-    _breedController = TextEditingController(text: widget.pet.breed);
-    _colorController = TextEditingController(text: widget.pet.color);
+    _breedController = TextEditingController(text: widget.post.breed ?? '');
+    _colorController = TextEditingController(text: widget.post.color ?? '');
     _descriptionController = TextEditingController(
-      text: widget.pet.description,
+      text: widget.post.description ?? '',
     );
-    _selectedType = widget.pet.type;
-    _selectedStatus = widget.pet.status;
-    _pickedLocation = LatLng(
-      widget.pet.location.coordinates[1],
-      widget.pet.location.coordinates[0],
-    );
+    _selectedType = widget.post.type;
+    _selectedAnimalType = widget.post.animalType ?? AnimalType.dog;
+    if (widget.post.location != null && widget.post.location['coordinates'] != null) {
+      _pickedLocation = LatLng(
+        widget.post.location['coordinates'][1].toDouble(),
+        widget.post.location['coordinates'][0].toDouble(),
+      );
+    }
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
     _breedController.dispose();
     _colorController.dispose();
     _descriptionController.dispose();
@@ -74,20 +73,19 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
     setState(() => _isSubmitting = true);
 
     try {
-      final petData = {
-        'name': _nameController.text.trim(),
+      final postData = {
         'type': _selectedType.name.toUpperCase(),
-        'status': _selectedStatus.name.toUpperCase(),
-        'breed': _breedController.text.trim(),
-        'color': _colorController.text.trim(),
+        'animalType': _selectedAnimalType?.name.toUpperCase(),
+        'breed': _breedController.text.trim().isEmpty ? null : _breedController.text.trim(),
+        'color': _colorController.text.trim().isEmpty ? null : _colorController.text.trim(),
         'description': _descriptionController.text.trim(),
         'latitude': _pickedLocation?.latitude,
         'longitude': _pickedLocation?.longitude,
       };
 
       await ref
-          .read(petsProvider.notifier)
-          .updatePet(widget.pet.id, petData, _selectedImages);
+          .read(postsProvider.notifier)
+          .updatePost(widget.post.id, postData, _selectedImages);
 
       if (mounted) {
         context.pop();
@@ -124,17 +122,6 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const AuthFieldLabel(text: 'Pet Name'),
-                const SizedBox(height: 8),
-                AuthTextField(
-                  controller: _nameController,
-                  hint: 'Buddy',
-                  icon: Icons.pets,
-                  enabled: !_isSubmitting,
-                ),
-
-                const SizedBox(height: 20),
-
                 Row(
                   children: [
                     Expanded(
@@ -143,10 +130,10 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
                         children: [
                           const AuthFieldLabel(text: 'Type'),
                           const SizedBox(height: 8),
-                          DropdownButtonFormField<PetType>(
+                          DropdownButtonFormField<PostType>(
                             initialValue: _selectedType,
                             decoration: _dropdownDecoration(),
-                            items: PetType.values.map((type) {
+                            items: PostType.values.where((t) => t != PostType.moment).map((type) {
                               return DropdownMenuItem(
                                 value: type,
                                 child: Text(type.name.toUpperCase()),
@@ -164,20 +151,20 @@ class _EditPetPageState extends ConsumerState<EditPetPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const AuthFieldLabel(text: 'Status'),
+                          const AuthFieldLabel(text: 'Animal Type'),
                           const SizedBox(height: 8),
-                          DropdownButtonFormField<PetStatus>(
-                            initialValue: _selectedStatus,
+                          DropdownButtonFormField<AnimalType>(
+                            initialValue: _selectedAnimalType,
                             decoration: _dropdownDecoration(),
-                            items: PetStatus.values.map((status) {
+                            items: AnimalType.values.map((type) {
                               return DropdownMenuItem(
-                                value: status,
-                                child: Text(status.name.toUpperCase()),
+                                value: type,
+                                child: Text(type.name.toUpperCase()),
                               );
                             }).toList(),
                             onChanged: _isSubmitting
                                 ? null
-                                : (v) => setState(() => _selectedStatus = v!),
+                                : (v) => setState(() => _selectedAnimalType = v!),
                           ),
                         ],
                       ),

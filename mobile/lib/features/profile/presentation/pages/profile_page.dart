@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../posts/presentation/widgets/post_card.dart';
-import '../../../posts/presentation/providers/pets_provider.dart';
+import 'package:mobile/core/theme/app_colors.dart';
+import 'package:mobile/features/auth/presentation/providers/auth_provider.dart';
+
+import 'package:mobile/features/posts/presentation/widgets/post_card.dart';
+import 'package:mobile/features/posts/presentation/providers/posts_provider.dart';
+import 'package:mobile/features/profile/presentation/providers/my_pet_profiles_provider.dart';
+import 'package:mobile/features/profile/presentation/pages/add_pet_profile_page.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -18,15 +21,15 @@ class ProfilePage extends ConsumerWidget {
       return const Scaffold(body: Center(child: Text('Please log in')));
     }
 
-    // Filter pets to show only those posted by "me"
-    final petsState = ref.watch(petsProvider);
+    final myPetProfilesState = ref.watch(myPetProfilesProvider);
+    final allPostsState = ref.watch(postsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 200,
+            expandedHeight: 180,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
@@ -85,50 +88,226 @@ class ProfilePage extends ConsumerWidget {
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'About Me',
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+                  // --- Community Stats (Based on Reference) ---
+                  Row(
+                    children: [
+                      _buildStatChip(
+                        context,
+                        '12',
+                        'Reported',
+                        Icons.campaign,
+                        Colors.orange.shade100,
+                        Colors.orange.shade800,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildStatChip(
+                        context,
+                        '5',
+                        'Found',
+                        Icons.favorite,
+                        Colors.teal.shade100,
+                        Colors.teal.shade800,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildStatChip(
+                        context,
+                        '450',
+                        'Points',
+                        Icons.stars,
+                        AppColors.primary.withValues(alpha: 0.3),
+                        Colors.teal.shade800,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // --- My Pets Carousel (Based on Reference) ---
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'My Pets',
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const AddPetProfilePage(),
+                          ),
+                        ),
+                        child: Text(
+                          'Add New',
+                          style: GoogleFonts.inter(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    user.bio ??
-                        'No bio yet. Tell the community about yourself!',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
+                  SizedBox(
+                    height: 160,
+                    child: myPetProfilesState.when(
+                      data: (profiles) {
+                        if (profiles.isEmpty) {
+                          return Center(
+                            child: Text(
+                              'No pet profiles yet.',
+                              style: GoogleFonts.inter(
+                                color: AppColors.textHint,
+                              ),
+                            ),
+                          );
+                        }
+                        return ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: profiles.length,
+                          itemBuilder: (context, index) {
+                            final pet = profiles[index];
+                            return Container(
+                              width: 130,
+                              margin: const EdgeInsets.only(right: 12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Stack(
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            image: DecorationImage(
+                                              image: (pet.images.isNotEmpty)
+                                                  ? NetworkImage(
+                                                      pet.images.first,
+                                                    )
+                                                  : const AssetImage(
+                                                          'assets/images/pet_placeholder.png',
+                                                        )
+                                                        as ImageProvider,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        ),
+                                        Positioned(
+                                          bottom: 0,
+                                          left: 0,
+                                          right: 0,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  const BorderRadius.vertical(
+                                                    bottom: Radius.circular(16),
+                                                  ),
+                                              gradient: LinearGradient(
+                                                colors: [
+                                                  Colors.black.withValues(
+                                                    alpha: 0.6,
+                                                  ),
+                                                  Colors.transparent,
+                                                ],
+                                                begin: Alignment.bottomCenter,
+                                                end: Alignment.topCenter,
+                                              ),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  pet.name,
+                                                  style: GoogleFonts.inter(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  pet.breed,
+                                                  style: GoogleFonts.inter(
+                                                    color: Colors.white70,
+                                                    fontSize: 10,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (e, st) => Center(child: Text('Error: $e')),
                     ),
                   ),
+
                   const SizedBox(height: 32),
-                  Text(
-                    'My Pet Posts',
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+                  // --- Posted Tab ---
+                  Row(
+                    children: [
+                      Column(
+                        children: [
+                          Text(
+                            'Posted',
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            height: 2,
+                            width: 40,
+                            color: AppColors.primary,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 24),
+                      Text(
+                        'Liked',
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textHint,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                 ],
               ),
             ),
           ),
-          petsState.when(
-            data: (pets) {
-              final myPets = pets
-                  .where((p) => p.poster?.id == user.id)
-                  .toList();
-              if (myPets.isEmpty) {
+          allPostsState.when(
+            data: (posts) {
+              final myPosts = posts.where((p) => p.poster?.id == user.id).toList();
+              if (myPosts.isEmpty) {
                 return const SliverToBoxAdapter(
                   child: Center(
-                    child: Text('You haven\'t posted any pets yet.'),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
+                      child: Text('You haven\'t posted any community updates yet.'),
+                    ),
                   ),
                 );
               }
@@ -136,21 +315,74 @@ class ProfilePage extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    (context, index) => PostCard(pet: myPets[index]),
-                    childCount: myPets.length,
+                    (context, index) => PostCard(post: myPosts[index]),
+                    childCount: myPosts.length,
                   ),
                 ),
               );
             },
             loading: () => const SliverToBoxAdapter(
-              child: Center(child: CircularProgressIndicator()),
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.all(40),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
             ),
             error: (e, st) => SliverToBoxAdapter(
-              child: Center(child: Text('Error loading pets: $e')),
+              child: Center(child: Text('Error loading posts: $e')),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStatChip(
+    BuildContext context,
+    String count,
+    String label,
+    IconData icon,
+    Color bgColor,
+    Color textColor,
+  ) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: textColor, size: 20),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  count,
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  label.toUpperCase(),
+                  style: GoogleFonts.inter(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

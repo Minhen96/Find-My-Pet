@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'pets_provider.dart';
+part of 'posts_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,43 +9,43 @@ part of 'pets_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(Pets)
-const petsProvider = PetsProvider._();
+@ProviderFor(Posts)
+const postsProvider = PostsProvider._();
 
-final class PetsProvider extends $AsyncNotifierProvider<Pets, List<Pet>> {
-  const PetsProvider._()
+final class PostsProvider extends $AsyncNotifierProvider<Posts, List<Post>> {
+  const PostsProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'petsProvider',
+        name: r'postsProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$petsHash();
+  String debugGetCreateSourceHash() => _$postsHash();
 
   @$internal
   @override
-  Pets create() => Pets();
+  Posts create() => Posts();
 }
 
-String _$petsHash() => r'1a21e39291a57a98f68c8bf24c3fa68f7edfdcad';
+String _$postsHash() => r'023749eabb7fe0f3d545b7bd488d77a1c58425d0';
 
-abstract class _$Pets extends $AsyncNotifier<List<Pet>> {
-  FutureOr<List<Pet>> build();
+abstract class _$Posts extends $AsyncNotifier<List<Post>> {
+  FutureOr<List<Post>> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<AsyncValue<List<Pet>>, List<Pet>>;
+    final ref = this.ref as $Ref<AsyncValue<List<Post>>, List<Post>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<Pet>>, List<Pet>>,
-              AsyncValue<List<Pet>>,
+              AnyNotifier<AsyncValue<List<Post>>, List<Post>>,
+              AsyncValue<List<Post>>,
               Object?,
               Object?
             >;

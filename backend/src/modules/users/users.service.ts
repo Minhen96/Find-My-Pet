@@ -5,15 +5,15 @@ import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Pet } from '../pets/entities/pet.entity';
+import { PetProfile } from '../pets/entities/pet-profile.entity';
 
 @Injectable()
 export class UsersService {
     constructor(
         @InjectRepository(User)
         private usersRepository: Repository<User>,
-        @InjectRepository(Pet)
-        private petsRepository: Repository<Pet>,
+        @InjectRepository(PetProfile)
+        private petProfilesRepository: Repository<PetProfile>,
     ) { }
 
     async create(registerDto: RegisterDto): Promise<User> {
@@ -58,9 +58,9 @@ export class UsersService {
         return this.usersRepository.save(user);
     }
 
-    async getUserPets(userId: string): Promise<Pet[]> {
-        return this.petsRepository.find({
-            where: { poster: { id: userId } },
+    async getUserPetProfiles(userId: string): Promise<PetProfile[]> {
+        return this.petProfilesRepository.find({
+            where: { owner: { id: userId } },
             order: { createdAt: 'DESC' },
         });
     }

@@ -2,7 +2,10 @@ import { Controller, Get, Patch, Body, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { User } from './entities/user.entity';
 
+@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
     constructor(private readonly usersService: UsersService) { }
@@ -22,7 +25,7 @@ export class UsersController {
     }
 
     @Get('me/pets')
-    async getMyPets(@CurrentUser() user: any) {
-        return this.usersService.getUserPets(user.id);
+    async getMyPets(@CurrentUser() user: User) {
+        return this.usersService.getUserPetProfiles(user.id);
     }
 }

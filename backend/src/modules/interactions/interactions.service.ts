@@ -7,7 +7,7 @@ import { Queue } from 'bullmq';
 import { Like } from './entities/like.entity';
 import { Comment } from './entities/comment.entity';
 import { User } from '../users/entities/user.entity';
-import { Pet } from '../pets/entities/pet.entity';
+import { Post } from '../posts/entities/post.entity';
 import { EventsGateway } from '../events/events.gateway';
 import { REDIS_KEYS, QUEUE_NAMES, WS_EVENTS, JOB_NAMES } from '../../common/constants/app.constants';
 
@@ -18,8 +18,8 @@ export class InteractionsService {
         private likesRepository: Repository<Like>,
         @InjectRepository(Comment)
         private commentsRepository: Repository<Comment>,
-        @InjectRepository(Pet)
-        private petsRepository: Repository<Pet>,
+        @InjectRepository(Post)
+        private postsRepository: Repository<Post>,
         @Inject('REDIS_CLIENT')
         private readonly redis: Redis,
         @InjectQueue(QUEUE_NAMES.INTERACTIONS)
@@ -27,31 +27,26 @@ export class InteractionsService {
         private readonly eventsGateway: EventsGateway,
     ) { }
 
-    async toggleLike(petId: string, user: User) {
-        const pet = await this.petsRepository.findOne({ where: { id: petId } });
-        if (!pet) throw new NotFoundException('Pet not found');
+    async toggleLike(postId: string, user: User) {
+        const post = await this.postsRepository.findOne({ where: { id: postId } });
+        if (!post) throw new NotFoundException('Post not found');
 
-        const redisKey = REDIS_KEYS.PET_LIKERS(petId);
-        const countKey = REDIS_KEYS.PET_LIKES_COUNT(petId);
+        const redisKey = REDIS_KEYS.POST_LIKERS(postId);
+        const countKey = REDIS_KEYS.POST_LIKES_COUNT(postId);
 
-        // Modern way: Update Cache first
         const isLiked = await this.redis.sismember(redisKey, user.id);
 
         if (isLiked) {
-            // Remove from cache
             await this.redis.srem(redisKey, user.id);
             await this.redis.decr(countKey);
 
-            // 🔥 Add a job to BullMQ - Don't wait for DB!
-            // returns "Success" to the user while the DB update happens later
             await this.interactionsQueue.add(JOB_NAMES.UNLIKE, {
-                petId,
+                postId,
                 userId: user.id,
                 action: JOB_NAMES.UNLIKE
             });
 
-            // Broadcast real-time change instantly!
-            this.eventsGateway.broadcastToPet(petId, WS_EVENTS.LIKE_UPDATE, {
+            this.eventsGateway.broadcastToPost(postId, WS_EVENTS.LIKE_UPDATE, {
                 liked: false,
                 userId: user.id,
                 newCount: parseInt(await this.redis.get(countKey) || '0')
@@ -59,20 +54,16 @@ export class InteractionsService {
 
             return { liked: false };
         } else {
-            // Add to cache
             await this.redis.sadd(redisKey, user.id);
             await this.redis.incr(countKey);
 
-            // 🔥 Add a job to BullMQ - Don't wait for DB!
-            // returns "Success" to the user while the DB update happens later
             await this.interactionsQueue.add(JOB_NAMES.LIKE, {
-                petId,
+                postId,
                 userId: user.id,
                 action: JOB_NAMES.LIKE
             });
 
-            // Broadcast real-time change instantly!
-            this.eventsGateway.broadcastToPet(petId, WS_EVENTS.LIKE_UPDATE, {
+            this.eventsGateway.broadcastToPost(postId, WS_EVENTS.LIKE_UPDATE, {
                 liked: true,
                 userId: user.id,
                 newCount: parseInt(await this.redis.get(countKey) || '0')
@@ -82,40 +73,37 @@ export class InteractionsService {
         }
     }
 
-    async addComment(petId: string, content: string, user: User) {
-        const pet = await this.petsRepository.findOne({ where: { id: petId } });
-        if (!pet) throw new NotFoundException('Pet not found');
+    async addComment(postId: string, content: string, user: User) {
+        const post = await this.postsRepository.findOne({ where: { id: postId } });
+        if (!post) throw new NotFoundException('Post not found');
 
         const comment = this.commentsRepository.create({
-            pet,
+            post,
             user,
             content,
         });
 
         const savedComment = await this.commentsRepository.save(comment);
 
-        // Broadcast to real-time clients
-        this.eventsGateway.broadcastToPet(petId, WS_EVENTS.NEW_COMMENT, savedComment);
+        this.eventsGateway.broadcastToPost(postId, WS_EVENTS.NEW_COMMENT, savedComment);
 
         return savedComment;
     }
 
-    async getInteractions(petId: string) {
-        const countKey = REDIS_KEYS.PET_LIKES_COUNT(petId);
+    async getInteractions(postId: string) {
+        const countKey = REDIS_KEYS.POST_LIKES_COUNT(postId);
 
-        // Modern Way: Check cache first
         let likesCount = await this.redis.get(countKey);
 
         if (likesCount === null) {
-            // Cache Miss: Warm it from DB
             likesCount = (await this.likesRepository.count({
-                where: { pet: { id: petId } },
+                where: { post: { id: postId } },
             })).toString();
-            await this.redis.set(countKey, likesCount, 'EX', 3600); // Cache for 1 hour
+            await this.redis.set(countKey, likesCount, 'EX', 3600);
         }
 
         const comments = await this.commentsRepository.find({
-            where: { pet: { id: petId } },
+            where: { post: { id: postId } },
             relations: ['user'],
             order: { createdAt: 'DESC' },
         });

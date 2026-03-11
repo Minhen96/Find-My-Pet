@@ -6,7 +6,7 @@ import {
     CreateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
-import { Pet } from '../../pets/entities/pet.entity';
+import { Post } from '../../posts/entities/post.entity';
 
 @Entity('comments')
 export class Comment {
@@ -19,8 +19,8 @@ export class Comment {
     @ManyToOne(() => User)
     user: User;
 
-    @ManyToOne(() => Pet)
-    pet: Pet;
+    @ManyToOne(() => Post)
+    post: Post;
 
     @CreateDateColumn()
     createdAt: Date;

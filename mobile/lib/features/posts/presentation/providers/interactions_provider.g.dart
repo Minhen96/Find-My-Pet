@@ -50,7 +50,7 @@ final class InteractionsProvider
   }
 }
 
-String _$interactionsHash() => r'84e3253655b0f5be2d27953290c7ce5ca16ba2af';
+String _$interactionsHash() => r'f6b9a00519658765c5a5b48814eefd765c94e74c';
 
 final class InteractionsFamily extends $Family
     with
@@ -70,8 +70,8 @@ final class InteractionsFamily extends $Family
         isAutoDispose: true,
       );
 
-  InteractionsProvider call(String petId) =>
-      InteractionsProvider._(argument: petId, from: this);
+  InteractionsProvider call(String postId) =>
+      InteractionsProvider._(argument: postId, from: this);
 
   @override
   String toString() => r'interactionsProvider';
@@ -79,9 +79,9 @@ final class InteractionsFamily extends $Family
 
 abstract class _$Interactions extends $AsyncNotifier<Map<String, dynamic>> {
   late final _$args = ref.$arg as String;
-  String get petId => _$args;
+  String get postId => _$args;
 
-  FutureOr<Map<String, dynamic>> build(String petId);
+  FutureOr<Map<String, dynamic>> build(String postId);
   @$mustCallSuper
   @override
   void runBuild() {

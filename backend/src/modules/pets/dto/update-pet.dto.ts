@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsNumber, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsNumber, IsArray, MaxLength } from 'class-validator';
 import { PetType, PetStatus } from '../enums/pet.enum';
 
 export class UpdatePetDto {
@@ -9,6 +9,7 @@ export class UpdatePetDto {
 
     @IsOptional()
     @IsString()
+    @MaxLength(100)
     name?: string;
 
     @IsOptional()
@@ -34,4 +35,24 @@ export class UpdatePetDto {
     @IsOptional()
     @IsNumber()
     longitude?: number;
+
+    @IsOptional()
+    @IsNumber()
+    age?: number;
+
+    @IsOptional()
+    @IsString()
+    gender?: string;
+
+    @IsOptional()
+    @IsString()
+    markings?: string;
+
+    @IsOptional()
+    @IsString()
+    healthNotes?: string;
+
+    @IsOptional()
+    @IsString()
+    microchipId?: string;
 }

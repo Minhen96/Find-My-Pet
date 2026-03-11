@@ -4,13 +4,13 @@ import { Like } from './entities/like.entity';
 import { Comment } from './entities/comment.entity';
 import { InteractionsService } from './interactions.service';
 import { InteractionsController } from './interactions.controller';
-import { Pet } from '../pets/entities/pet.entity';
+import { Post } from '../posts/entities/post.entity';
 import { BullModule } from '@nestjs/bullmq';
 import { InteractionsProcessor } from './interactions.processor';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Like, Comment, Pet]),
+        TypeOrmModule.forFeature([Like, Comment, Post]),
         BullModule.registerQueue({
             name: 'interactions',
         }),

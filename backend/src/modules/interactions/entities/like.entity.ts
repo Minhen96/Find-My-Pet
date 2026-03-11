@@ -6,10 +6,10 @@ import {
     Unique,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
-import { Pet } from '../../pets/entities/pet.entity';
+import { Post } from '../../posts/entities/post.entity';
 
 @Entity('likes')
-@Unique(['user', 'pet'])
+@Unique(['user', 'post'])
 export class Like {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -17,8 +17,8 @@ export class Like {
     @ManyToOne(() => User)
     user: User;
 
-    @ManyToOne(() => Pet)
-    pet: Pet;
+    @ManyToOne(() => Post)
+    post: Post;
 
     @CreateDateColumn()
     createdAt: Date;

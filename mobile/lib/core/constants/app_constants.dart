@@ -4,8 +4,8 @@ class AppConstants {
 
 class _WsEvents {
   const _WsEvents();
-  final String joinPet = 'joinPet';
-  final String leavePet = 'leavePet';
+  final String joinPost = 'joinPost';
+  final String leavePost = 'leavePost';
   final String likeUpdate = 'likeUpdate';
   final String newComment = 'newComment';
 }

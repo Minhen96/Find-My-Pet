@@ -15,6 +15,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { EventsModule } from './modules/events/events.module';
 import { HealthModule } from './modules/health/health.module';
 import { MediaModule } from './modules/media/media.module';
+import { PostsModule } from './modules/posts/posts.module';
 
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 
@@ -22,6 +23,7 @@ import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis'
   imports: [
     AuthModule,
     PetsModule,
+    PostsModule,
     StorageModule,
     InteractionsModule,
     RedisModule,

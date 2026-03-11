@@ -58,14 +58,14 @@ export class MediaService {
      * Adds an image to the background fallback queue.
      * This is the "Safety Net" if direct upload fails.
      */
-    async uploadFallback(file: Express.Multer.File, petId?: string) {
+    async uploadFallback(file: Express.Multer.File, postId?: string) {
         const job = await this.mediaQueue.add(
             'upload-image',
             {
                 fileBuffer: file.buffer,
                 fileName: file.originalname,
                 contentType: file.mimetype,
-                petId,
+                postId,
             },
             {
                 attempts: 5,

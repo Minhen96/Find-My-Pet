@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../providers/pets_provider.dart';
+import '../providers/posts_provider.dart';
 import '../widgets/post_card.dart';
 
 class CommunityFeedPage extends ConsumerWidget {
@@ -12,13 +12,13 @@ class CommunityFeedPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final petsAsync = ref.watch(petsProvider);
+    final postsAsync = ref.watch(postsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: () => ref.read(petsProvider.notifier).refresh(),
+          onRefresh: () => ref.read(postsProvider.notifier).refresh(),
           color: AppColors.primaryDark,
           child: CustomScrollView(
             slivers: [
@@ -151,8 +151,8 @@ class CommunityFeedPage extends ConsumerWidget {
               ),
 
               // ── Post Feed ──
-              petsAsync.when(
-                data: (pets) => pets.isEmpty
+              postsAsync.when(
+                data: (posts) => posts.isEmpty
                     ? const SliverFillRemaining(
                         child: Center(
                           child: Text('No posts found. Be the first to post!'),
@@ -160,8 +160,8 @@ class CommunityFeedPage extends ConsumerWidget {
                       )
                     : SliverList(
                         delegate: SliverChildBuilderDelegate(
-                          (context, index) => PostCard(pet: pets[index]),
-                          childCount: pets.length,
+                          (context, index) => PostCard(post: posts[index]),
+                          childCount: posts.length,
                         ),
                       ),
                 loading: () => const SliverFillRemaining(

@@ -7,16 +7,16 @@ import 'package:latlong2/latlong.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/providers/socket_provider.dart';
-import 'package:mobile/features/posts/data/models/pet.dart';
+import 'package:mobile/features/posts/data/models/post.dart';
 import '../providers/interactions_provider.dart';
 import 'package:mobile/features/auth/presentation/providers/auth_provider.dart';
-import '../providers/pets_provider.dart'; // Add pets provider for delete
-import './edit_pet_page.dart'; // Add edit page
+import '../providers/posts_provider.dart';
+import './edit_post_page.dart';
 
 class PostDetailsPage extends ConsumerStatefulWidget {
-  final Pet pet;
+  final Post post;
 
-  const PostDetailsPage({super.key, required this.pet});
+  const PostDetailsPage({super.key, required this.post});
 
   @override
   ConsumerState<PostDetailsPage> createState() => _PostDetailsPageState();
@@ -29,7 +29,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
           .read(socketProvider)
-          .emit(AppConstants.wsEvents.joinPet, widget.pet.id);
+          .emit(AppConstants.wsEvents.joinPost, widget.post.id);
     });
   }
 
@@ -37,7 +37,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
   void dispose() {
     ref
         .read(socketProvider)
-        .emit(AppConstants.wsEvents.leavePet, widget.pet.id);
+        .emit(AppConstants.wsEvents.leavePost, widget.post.id);
     super.dispose();
   }
 
@@ -63,7 +63,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
 
     if (confirmed == true) {
       try {
-        await ref.read(petsProvider.notifier).deletePet(widget.pet.id);
+        await ref.read(postsProvider.notifier).deletePost(widget.post.id);
         if (mounted) {
           Navigator.of(context).pop(); // Go back to feed
           ScaffoldMessenger.of(
@@ -82,25 +82,26 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final interactionsAsync = ref.watch(interactionsProvider(widget.pet.id));
+    final interactionsAsync = ref.watch(interactionsProvider(widget.post.id));
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          widget.pet.status == PetStatus.moment
+          widget.post.type == PostType.moment
               ? 'Moment Details'
-              : 'Pet Details',
+              : 'Post Details',
           style: GoogleFonts.inter(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: AppColors.textPrimary,
         actions: [
-          if (ref.watch(authProvider).value?.id == widget.pet.poster?.id) ...[
+          if (ref.watch(authProvider).value?.id == widget.post.poster?.id) ...[
             IconButton(
               icon: const Icon(Icons.edit_outlined),
+              // ignore: deprecated_member_use_from_same_package
               onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => EditPetPage(pet: widget.pet)),
+                MaterialPageRoute(builder: (_) => EditPostPage(post: widget.post)),
               ),
             ),
             IconButton(
@@ -115,14 +116,14 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image Carousel
-            if (widget.pet.images.isNotEmpty)
+            if (widget.post.images.isNotEmpty)
               AspectRatio(
                 aspectRatio: 1.2,
                 child: PageView.builder(
-                  itemCount: widget.pet.images.length,
+                  itemCount: widget.post.images.length,
                   itemBuilder: (context, index) {
                     return Image.network(
-                      widget.pet.images[index],
+                      widget.post.images[index],
                       fit: BoxFit.cover,
                     );
                   },
@@ -147,10 +148,10 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                 children: [
                   Row(
                     children: [
-                      _StatusBadge(status: widget.pet.status),
+                      _StatusBadge(type: widget.post.type),
                       const SizedBox(width: 8),
                       Text(
-                        '${widget.pet.type.name.toUpperCase()} • ${widget.pet.breed}',
+                        '${widget.post.animalType?.name.toUpperCase() ?? "UNKNOWN"} • ${widget.post.breed ?? "Unknown Breed"}',
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -161,7 +162,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    widget.pet.name ?? 'Unknown',
+                    widget.post.petProfile?.name ?? 'Unnamed',
                     style: GoogleFonts.inter(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -170,7 +171,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Color: ${widget.pet.color}',
+                    'Color: ${widget.post.color ?? "Unknown"}',
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       color: AppColors.textSecondary,
@@ -188,7 +189,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    widget.pet.description ?? 'No description provided.',
+                    widget.post.description ?? 'No description provided.',
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       height: 1.5,
@@ -197,9 +198,9 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                   ),
                   const SizedBox(height: 30),
                   Text(
-                    widget.pet.status == PetStatus.moment
+                    widget.post.type == PostType.moment
                         ? 'Captured Location'
-                        : 'Last Seen Location',
+                        : 'Event Location',
                     style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -213,10 +214,10 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                       child: FlutterMap(
                         options: MapOptions(
                           initialCenter: LatLng(
-                            widget.pet.location?['coordinates']?[1]
+                            widget.post.location?['coordinates']?[1]
                                     ?.toDouble() ??
                                 3.139,
-                            widget.pet.location?['coordinates']?[0]
+                            widget.post.location?['coordinates']?[0]
                                     ?.toDouble() ??
                                 101.687,
                           ),
@@ -231,10 +232,10 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                             markers: [
                               Marker(
                                 point: LatLng(
-                                  widget.pet.location?['coordinates']?[1]
+                                  widget.post.location?['coordinates']?[1]
                                           ?.toDouble() ??
                                       3.139,
-                                  widget.pet.location?['coordinates']?[0]
+                                  widget.post.location?['coordinates']?[0]
                                           ?.toDouble() ??
                                       101.687,
                                 ),
@@ -265,7 +266,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                   const SizedBox(height: 12),
                   interactionsAsync.when(
                     data: (data) {
-                      final comments = data['comments'] as List<dynamic>;
+                      final comments = data['comments'] as List<dynamic>? ?? [];
                       if (comments.isEmpty) {
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 20),
@@ -282,13 +283,14 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                         separatorBuilder: (_, __) => const SizedBox(height: 16),
                         itemBuilder: (context, index) {
                           final comment = comments[index];
+                          final user = comment['user'] ?? {};
                           return Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               CircleAvatar(
                                 radius: 16,
                                 backgroundImage: NetworkImage(
-                                  'https://ui-avatars.com/api/?name=${comment['user']['displayName']}',
+                                  'https://ui-avatars.com/api/?name=${user['displayName'] ?? "User"}',
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -297,7 +299,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      comment['user']['displayName'],
+                                      user['displayName'] ?? 'Anonymous',
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
                                         fontWeight: FontWeight.bold,
@@ -305,7 +307,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      comment['content'],
+                                      comment['content'] ?? '',
                                       style: GoogleFonts.inter(fontSize: 14),
                                     ),
                                   ],
@@ -321,7 +323,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                     error: (e, __) => Text('Error loading comments: $e'),
                   ),
                   const SizedBox(height: 12),
-                  _CommentInput(petId: widget.pet.id),
+                  _CommentInput(postId: widget.post.id),
                 ],
               ),
             ),
@@ -333,8 +335,8 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
 }
 
 class _CommentInput extends ConsumerStatefulWidget {
-  final String petId;
-  const _CommentInput({required this.petId});
+  final String postId;
+  const _CommentInput({required this.postId});
 
   @override
   ConsumerState<_CommentInput> createState() => _CommentInputState();
@@ -357,7 +359,7 @@ class _CommentInputState extends ConsumerState<_CommentInput> {
     setState(() => _isSending = true);
     try {
       await ref
-          .read(interactionsProvider(widget.petId).notifier)
+          .read(interactionsProvider(widget.postId).notifier)
           .addComment(text);
       _controller.clear();
     } finally {
@@ -405,25 +407,30 @@ class _CommentInputState extends ConsumerState<_CommentInput> {
 }
 
 class _StatusBadge extends StatelessWidget {
-  final PetStatus status;
+  final PostType type;
 
-  const _StatusBadge({required this.status});
+  const _StatusBadge({required this.type});
 
   @override
   Widget build(BuildContext context) {
     Color color;
-    switch (status) {
-      case PetStatus.lost:
+    switch (type) {
+      case PostType.lost:
         color = Colors.redAccent;
         break;
-      case PetStatus.found:
+      case PostType.found:
         color = Colors.green;
         break;
-      case PetStatus.moment:
+      case PostType.moment:
         color = AppColors.primaryDark;
         break;
-      default:
+      case PostType.sighted:
+      case PostType.stray:
         color = Colors.orange;
+        break;
+      case PostType.rescued:
+        color = AppColors.primary;
+        break;
     }
 
     return Container(
@@ -433,7 +440,7 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        status.name.toUpperCase(),
+        type.name.toUpperCase(),
         style: GoogleFonts.inter(
           fontSize: 10,
           fontWeight: FontWeight.bold,
