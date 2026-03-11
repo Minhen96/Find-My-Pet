@@ -5,3 +5,6 @@ dist/
 .DS_Store
 pgdata/
 reference/
+
+.env.production
+.env.development

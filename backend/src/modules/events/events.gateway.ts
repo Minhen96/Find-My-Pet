@@ -13,7 +13,7 @@ import { WS_EVENTS } from '../../common/constants/app.constants';
 @WebSocketGateway({
     // Allow frontend to connect
     cors: {
-        origin: process.env.FRONTEND_URL || '*',
+        origin: true,
     },
 })
 export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {

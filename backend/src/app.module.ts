@@ -67,8 +67,8 @@ import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis'
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: process.env.NODE_ENV === 'production'
-        ? '.env.production'
-        : '.env.development',
+        ? '../.env.production'
+        : '../.env.development',
       validate,
     }),
     TypeOrmModule.forRootAsync({
@@ -91,10 +91,14 @@ import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis'
     }),
   ],
   providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
+    ...(process.env.NODE_ENV === 'production'
+      ? [
+        {
+          provide: APP_GUARD,
+          useClass: ThrottlerGuard,
+        },
+      ]
+      : []),
   ],
 })
 export class AppModule implements NestModule {

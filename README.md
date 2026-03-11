@@ -19,6 +19,8 @@ A high-performance, community-driven lost and found pet platform designed for ef
 - [x] **Redis Caching**: Sub-millisecond social interaction (Like/Comment) responses.
 - [x] **BullMQ Background Jobs**: Reliable, asynchronous database synchronization.
 - [x] **Real-Time WebSockets**: Instant Like/Comment updates across all connected devices.
+- [x] **Robust Networking**: Global Dio Interceptor safely extracting NestJS `{data: ...}` payloads across all routes.
+- [x] **Secure Storage Resilience**: Defensive parsing added to `flutter_secure_storage` to handle corrupted Web cache keys without crashing (`TypeError: Null`).
 
 ## 🛠️ Quick Start
 
@@ -46,6 +48,14 @@ cd mobile
 flutter pub get
 flutter run -d chrome  # For web testing
 ```
+
+### 🧹 Resetting the Database
+If you ever need to completely wipe your local database during testing, run:
+```bash
+docker compose down -v
+docker compose up -d
+```
+*Note: Do not rely on TypeORM `synchronize: true` or `dropSchema: true` in `datasource.config.ts` unless necessary, as it can cause unexpected schema destruction.*
 
 ---
 *Building the world's most responsive community for our furry friends.*

@@ -14,6 +14,14 @@ export default new DataSource({
     database: process.env.DB_NAME,
     entities: [join(__dirname, 'modules/**/*.entity{.ts,.js}')],
     migrations: [join(__dirname, 'migrations/*{.ts,.js}')],
+    /* 
+     * ⚠️ STARTUP DATABASE BEHAVIOR:
+     * 
+     * synchronize: false -> (SAFE/PRODUCTION) Preserves data. Requires running migrations manually.
+     * synchronize: true  -> (DEV ONLY) Auto-alters tables/columns to match your Entity classes on startup.
+     *                       Warning: can cause data loss if you rename/delete entity properties!
+     * dropSchema: true   -> (DANGER/TESTING) Completely wipes/drops the entire database on every startup.
+     */
     synchronize: false,
     logging: true,
 });
